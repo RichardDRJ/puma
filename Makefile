@@ -50,7 +50,7 @@ endif
 
 TARGET		:= $(BINDIR)/libpumalist.$(EXT)
 
-include test.mk
+include tests/test.mk
 
 .PHONY: all clean
 
