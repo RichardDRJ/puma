@@ -28,25 +28,26 @@ TEST_DEFS		:=
 TEST_CFLAGS		= -std=gnu99 -Wall -Wextra -Werror -pedantic -O2
 TEST_CXXFLAGS	= -std=c++11 -Wall -Wextra -Werror -pedantic -O2
 
+TEST_FOLDERS	= $(TEST_BINDIR) $(TEST_BINMODS) $(TEST_BUILDDIR) $(TEST_BUILDMODS)
+
 .PHONY: test test_clean
 
 test: $(TEST_TARGET)
 	@echo "Running tests..."
 	@LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(BINDIR) $(TEST_TARGET)
 
-test_folders:
-	@mkdir -p $(TEST_BINDIR) $(TEST_BINMODS)
-	@mkdir -p $(TEST_BUILDDIR) $(TEST_BUILDMODS)
+$(TEST_FOLDERS):
+	@mkdir -p $(TEST_FOLDERS)
 
 $(TEST_TARGET): $(TEST_OBJECTS) $(TARGET)
 	@echo "Linking $@"
 	$(LINKER) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS)
 
-$(TEST_BUILDDIR)/%.cpp.o: $(TEST_SRCDIR)/%.cpp
+$(TEST_BUILDDIR)/%.cpp.o: $(TEST_SRCDIR)/%.cpp $(TEST_FOLDERS)
 	@echo "Compiling $<"
 	@$(CXX) $(TEST_INCFLAGS) $(TEST_DEFS) $(TEST_CXXFLAGS) -c $< -o $@
 
-$(TEST_BUILDDIR)/%.c.o: $(TEST_SRCDIR)/%.c
+$(TEST_BUILDDIR)/%.c.o: $(TEST_SRCDIR)/%.c $(TEST_FOLDERS)
 	@echo "Compiling $<"
 	@$(CC) $(TEST_INCFLAGS) $(TEST_DEFS) $(TEST_CFLAGS) -c $< -o $@
 

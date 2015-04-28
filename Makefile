@@ -28,6 +28,8 @@ CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -ope
 LINKER		= icc
 LDFLAGS		= -openmp -shared -shared-intel
 
+FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
+
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
 	LDFLAGS +=		-lnuma
@@ -50,23 +52,22 @@ TARGET		:= $(BINDIR)/libpumalist.$(EXT)
 
 include test.mk
 
-.PHONY: all clean folders
+.PHONY: all clean
 
-all: folders $(TARGET) test
+all: $(TARGET) test
 
-folders: test_folders
-	@mkdir -p $(BINDIR) $(BINMODS)
-	@mkdir -p $(BUILDDIR) $(BUILDMODS)
+$(FOLDERS):
+	@mkdir -p $(FOLDERS)
 
 $(TARGET): $(OBJECTS)
 	@echo "Linking $@"
 	@$(LINKER) -o $@ $^ $(LDFLAGS)
 
-$(BUILDDIR)/%.cpp.o: src/%.cpp
+$(BUILDDIR)/%.cpp.o: src/%.cpp $(FOLDERS)
 	@echo "Compiling $<"
 	@$(CXX) $(INCFLAGS) $(DEFS) $(CXXFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.c.o: src/%.c
+$(BUILDDIR)/%.c.o: src/%.c $(FOLDERS)
 	@echo "Compiling $<"
 	@$(CC) $(INCFLAGS) $(DEFS) $(CFLAGS) -c $< -o $@
 
