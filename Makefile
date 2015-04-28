@@ -4,8 +4,7 @@ SRCDIR		:= src
 MODULES		:= $(subst src/,,$(shell find $(SRCDIR)/* -type d))
 BINDIR		:= bin
 BUILDDIR	:= build
-DATADIR		:= data
-INCDIRS		:= include $(CYTHONDIR)
+INCDIRS		:= include
 
 BUILDMODS	:= $(addprefix $(BUILDDIR)/,$(MODULES))
 BINMODS		:= $(addprefix $(BINDIR)/,$(MODULES))
@@ -26,17 +25,8 @@ INCFLAGS	= $(addprefix -I,$(INCDIRS))
 CFLAGS		= -axSSE4.1 -std=gnu99 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -openmp -fPIC
 CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -openmp -fPIC
 
-ARCH		:= $(shell getconf LONG_BIT)
-
-ARCHFLAGS_64	= -arch x86_64
-ARCHFLAGS_32	= -arch i386
-
-ARCHFLAGS		= $(ARCHFLAGS_$(ARCH))
-
 LINKER		= icc
-LINKDIRS	= -L$(BINDIR) $(addprefix -L,$(BINMODS))
-LDFLAGS		= -lstdc++ -openmp -shared
-LDFLAGS		+= $(LINKDIRS)
+LDFLAGS		= -openmp -shared -shared-intel
 
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
@@ -50,19 +40,21 @@ else ifeq ($(OS),Darwin)
 	LDFLAGS += -L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib
 	CYTHONINCS += /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/include
 	CYTHONLIBS += /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib
-	CFLAGS += 		-DNNUMA
+	CFLAGS 		+= -DNNUMA
 	CC			= icc
 	CXX			= icc -cxxlib
 	EXT			= dylib
 endif
 
-TARGET		:= $(BINDIR)/pumalist.$(EXT)
+TARGET		:= $(BINDIR)/libpumalist.$(EXT)
+
+include test.mk
 
 .PHONY: all clean folders
 
-all: folders $(TARGET)
+all: folders $(TARGET) test
 
-folders:
+folders: test_folders
 	@mkdir -p $(BINDIR) $(BINMODS)
 	@mkdir -p $(BUILDDIR) $(BUILDMODS)
 
@@ -80,6 +72,6 @@ $(BUILDDIR)/%.c.o: src/%.c
 
 $(SRCS): $(HEADERS)
 
-clean:
+clean: test_clean
 	@echo "Cleaning working tree"
 	@rm -rf $(BUILDDIR) $(BINDIR)
