@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <sched.h>
 
-#include "internal/pumathreadpool.h"
+#include "pumathreadpool.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -35,24 +35,22 @@ static pthread_key_t threadNumKey;
 static pthread_key_t cpuNumKey;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
-size_t _pumaGetThreadPoolNumber(void)
+size_t pumaGetThreadNum(void)
 {
 	return *((size_t*)pthread_getspecific(threadNumKey));
 }
 
-size_t _pumaGetNumThreadsInPool(void)
+size_t pumaGetNumThreads(struct pumaThreadPool* pool)
 {
-	return *((size_t*)pthread_getspecific(numThreadsKey));
+	if(pool == NULL)
+		return *((size_t*)pthread_getspecific(numThreadsKey));
+	else
+		return pool->numThreads;
 }
 
-size_t _pumaGetCPUNum(void)
+size_t pumaGetCPUNum(void)
 {
 	return *((size_t*)pthread_getspecific(cpuNumKey));
-}
-
-size_t _getThreadPoolNumThreads(struct pumaThreadPool* pool)
-{
-	return pool->numThreads;
 }
 
 #ifdef __linux__
@@ -88,7 +86,7 @@ static void _parseAffinityStr(char* affinityStr, cpu_set_t* set)
 }
 #endif
 
-void _executeOnThreadPool(struct pumaThreadPool* tp,
+void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg)
 {
 	tp->workFunction = workFunction;
@@ -139,7 +137,7 @@ static void _make_keys(void)
 	pthread_key_create(&cpuNumKey, NULL);
 }
 
-struct pumaThreadPool* _newThreadPool(size_t numThreads, char* affinityStr)
+struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 {
 	struct pumaThreadPool* threadPool =
 			(struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
@@ -194,9 +192,11 @@ struct pumaThreadPool* _newThreadPool(size_t numThreads, char* affinityStr)
 					&_threadPoolWorker, tpInfo);
 		}
 	}
+
+	return threadPool;
 }
 
-void _freeThreadPool(struct pumaThreadPool* pool)
+void freeThreadPool(struct pumaThreadPool* pool)
 {
 	for(size_t i = 0; i < pool->numThreads; ++i)
 		(void)pthread_cancel(pool->threads[i]);

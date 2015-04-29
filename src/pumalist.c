@@ -7,7 +7,7 @@
 #include "internal/pumathreadlist.h"
 #include "internal/pumadomain.h"
 #include "internal/pumautil.h"
-#include "internal/pumathreadpool.h"
+#include "pumathreadpool.h"
 
 #include <stdlib.h>
 #include <sched.h>
@@ -28,7 +28,7 @@ static void _setupThreadListsWorker(void* arg)
 	struct pumaThreadList* tl = &domain->listsInDomain[cpuIndex];
 	tl->active = true;
 	tl->numaDomain = currDomain;
-	tl->tid = _pumaGetThreadPoolNumber();
+	tl->tid = pumaGetThreadNum();
 	tl->elementSize = list->elementSize;
 }
 
@@ -46,7 +46,7 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 	newList->elementSize = elementSize;
 	newList->threadLists = (struct pumaThreadList*)calloc(numCores, sizeof(struct pumaThreadList));
 	newList->numCores = numCores;
-	newList->threadPool = _newThreadPool(numThreads, threadAffinity);
+	newList->threadPool = newThreadPool(numThreads, threadAffinity);
 
 	size_t numDomains = _getNumDomains();
 	newList->numDomains = numDomains;
@@ -60,7 +60,7 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 		tl += newList->domains[i].numListsInDomain;
 	}
 
-	_executeOnThreadPool(newList->threadPool, &_setupThreadListsWorker, (void*)newList);
+	executeOnThreadPool(newList->threadPool, &_setupThreadListsWorker, (void*)newList);
 
 	for(size_t i = 0; i < numCores; ++i)
 		VALGRIND_MAKE_MEM_NOACCESS(newList->threadLists + i, sizeof(struct pumaThreadList));
@@ -78,7 +78,7 @@ static void _getNumElementsWorker(void* arg)
 {
 	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
 	struct pumaList* list = vars->list;
-	size_t thread = _pumaGetThreadPoolNumber();
+	size_t thread = pumaGetThreadNum();
 
 	int currDomain = _getCurrentNumaDomain();
 	struct pumaDomain* domain = list->domains + currDomain;
@@ -100,7 +100,7 @@ static void _getNumElementsWorker(void* arg)
 
 size_t getNumElements(struct pumaList* list)
 {
-	size_t numThreads = _getThreadPoolNumThreads(list->threadPool);
+	size_t numThreads = pumaGetNumThreads(list->threadPool);
 	size_t sums[numThreads];
 	memset(sums, 0, numThreads * sizeof(size_t));
 
@@ -108,7 +108,7 @@ size_t getNumElements(struct pumaList* list)
 	arg.list = list;
 	arg.sums = sums;
 
-	_executeOnThreadPool(list->threadPool, &_getNumElementsWorker, (void*)(&arg));
+	executeOnThreadPool(list->threadPool, &_getNumElementsWorker, (void*)(&arg));
 
 	size_t sum = 0;
 
@@ -121,7 +121,7 @@ size_t getNumElements(struct pumaList* list)
 static void _destroyThreadListWorker(void* arg)
 {
 	struct pumaList* list = (struct pumaList*)arg;
-	size_t thread = _pumaGetThreadPoolNumber();
+	size_t thread = pumaGetThreadNum();
 	struct pumaNode* currentNode = list->threadLists[thread].head;
 
 	while(currentNode != NULL)
@@ -139,7 +139,7 @@ void destroyPumaList(struct pumaList* list)
 	VALGRIND_MAKE_MEM_DEFINED(list->threadLists,
 			list->numCores * sizeof(struct pumaThreadList));
 	
-	_executeOnThreadPool(list->threadPool, &_destroyThreadListWorker, (void*)list);
+	executeOnThreadPool(list->threadPool, &_destroyThreadListWorker, (void*)list);
 
 	free(list->threadLists);
 	free(list);

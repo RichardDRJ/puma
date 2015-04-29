@@ -22,11 +22,11 @@ OBJECTS		:= $(COBJECTS) $(CXXOBJECTS)
 
 INCFLAGS	= $(addprefix -I,$(INCDIRS))
 
-CFLAGS		= -axSSE4.1 -std=gnu99 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -openmp -fPIC
-CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -openmp -fPIC
+CFLAGS		= -axSSE4.1 -std=gnu99 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -fPIC -pthread
+CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -fPIC -pthread
 
 LINKER		= icc
-LDFLAGS		= -shared -lpthread
+LDFLAGS		= -shared -pthread
 
 FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 

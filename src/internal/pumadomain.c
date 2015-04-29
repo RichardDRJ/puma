@@ -3,7 +3,7 @@
 
 #include "internal/pumadomain.h"
 #include "internal/numa.h"
-#include "internal/pumathreadpool.h"
+#include "pumathreadpool.h"
 
 #include <unistd.h>
 #include <assert.h>
@@ -14,7 +14,7 @@ int _getCurrentNumaDomain(void)
 #ifdef NNUMA
 	int node = 0;
 #else
-	int cpu = _pumaGetCPUNum();
+	int cpu = pumaGetCPUNum();
 
 	int node = numa_node_of_cpu(cpu);
 #endif
@@ -25,9 +25,9 @@ int _getCurrentNumaDomain(void)
 size_t _getCurrentCPUIndexInDomain(void)
 {
 #ifdef NNUMA
-	size_t index = _pumaGetThreadPoolNumber();
+	size_t index = pumaGetThreadNum();
 #else
-	int cpu = _pumaGetCPUNum();
+	int cpu = pumaGetCPUNum();
 
 	int node = numa_node_of_cpu(cpu);
 

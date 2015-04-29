@@ -5,7 +5,7 @@
 #include "internal/pumanode.h"
 #include "internal/pumabalance.h"
 #include "internal/pumathreadlist.h"
-#include "internal/pumathreadpool.h"
+#include "pumathreadpool.h"
 
 #include <assert.h>
 
@@ -73,7 +73,7 @@ struct _runKernelArg
 static void _runKernelWorker(void* voidArg)
 {
 	struct _runKernelArg* arg = (struct _runKernelArg*)voidArg;
-	int thread = _pumaGetThreadPoolNumber();
+	int thread = pumaGetThreadNum();
 	arg->extraData[thread] = arg->extraDataDetails
 			->extraDataConstructor(arg->extraDataDetails->constructorData);
 
@@ -87,7 +87,7 @@ static void _runKernelWorker(void* voidArg)
 static void _cleanupKernelWorker(void* voidArg)
 {
 	struct _runKernelArg* arg = (struct _runKernelArg*)voidArg;
-	int thread = _pumaGetThreadPoolNumber();
+	int thread = pumaGetThreadNum();
 	arg->extraDataDetails->extraDataDestructor(arg->extraData[thread]);
 }
 
@@ -96,7 +96,7 @@ void runKernelList(struct pumaList* list, pumaKernel kernels[],
 {
 	_balanceThreadLoad(list);
 
-	unsigned int numThreads = _getThreadPoolNumThreads(list->threadPool);
+	unsigned int numThreads = pumaGetNumThreads(list->threadPool);
 	void* extraData[numThreads];
 
 	if(extraDataDetails == NULL)
@@ -109,12 +109,12 @@ void runKernelList(struct pumaList* list, pumaKernel kernels[],
 	arg.extraDataDetails = extraDataDetails;
 	arg.extraData = extraData;
 
-	_executeOnThreadPool(list->threadPool, _runKernelWorker, (void*)extraData);
+	executeOnThreadPool(list->threadPool, _runKernelWorker, (void*)(&arg));
 
 	extraDataDetails->extraDataReduce(extraDataDetails->retValue,
 			extraData, numThreads);
 
-	_executeOnThreadPool(list->threadPool, _cleanupKernelWorker, (void*)extraData);
+	executeOnThreadPool(list->threadPool, _cleanupKernelWorker, (void*)(&arg));
 }
 
 void runKernel(struct pumaList* list, pumaKernel kernel,
