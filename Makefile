@@ -26,7 +26,7 @@ CFLAGS		= -axSSE4.1 -std=gnu99 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -open
 CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -openmp -fPIC
 
 LINKER		= icc
-LDFLAGS		= -openmp -shared -shared-intel
+LDFLAGS		= -shared -lpthread
 
 FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 

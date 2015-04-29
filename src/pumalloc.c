@@ -8,7 +8,6 @@
 #include "internal/pumanode.h"
 #include "internal/pumathreadlist.h"
 
-#include <omp.h>
 
 void* _pumallocOnThreadList(struct pumaThreadList* threadList)
 {

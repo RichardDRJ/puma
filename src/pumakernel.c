@@ -7,7 +7,6 @@
 #include "internal/pumathreadlist.h"
 #include "internal/pumathreadpool.h"
 
-#include <omp.h>
 #include <assert.h>
 
 static void _runKernelOnNode(struct pumaNode* node,
@@ -97,7 +96,7 @@ void runKernelList(struct pumaList* list, pumaKernel kernels[],
 {
 	_balanceThreadLoad(list);
 
-	unsigned int numThreads = omp_get_max_threads();
+	unsigned int numThreads = _getThreadPoolNumThreads(list->threadPool);
 	void* extraData[numThreads];
 
 	if(extraDataDetails == NULL)

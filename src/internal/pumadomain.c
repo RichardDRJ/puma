@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <assert.h>
-#include <omp.h>
 #include <stdbool.h>
 
 int _getCurrentNumaDomain(void)

@@ -19,7 +19,7 @@ TEST_COBJECTS 	:= $(subst $(TEST_SRCDIR),$(TEST_BUILDDIR),$(TEST_CSRCS:%.c=%.c.o
 TEST_CXXOBJECTS	:= $(subst $(TEST_SRCDIR),$(TEST_BUILDDIR),$(TEST_CXXSRCS:%.cpp=%.cpp.o))
 TEST_OBJECTS	:= $(TEST_COBJECTS) $(TEST_CXXOBJECTS)
 
-TEST_LDFLAGS	:= -L$(BINDIR) -lpumalist -shared-intel -openmp
+TEST_LDFLAGS	:= -L$(BINDIR) -lpumalist
 
 TEST_INCFLAGS	:= $(addprefix -I,$(TEST_INCDIRS))
 
