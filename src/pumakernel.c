@@ -5,6 +5,7 @@
 #include "internal/pumanode.h"
 #include "internal/pumabalance.h"
 #include "internal/pumathreadlist.h"
+#include "internal/pumathreadpool.h"
 
 #include <omp.h>
 #include <assert.h>
@@ -61,6 +62,36 @@ void runKernelCurrentThread(struct pumaList* list, pumaKernel kernel,
 	extraDataDetails->extraDataDestructor(extraData);
 }
 
+struct _runKernelArg
+{
+	struct pumaList* list;
+	pumaKernel* kernels;
+	size_t numKernels;
+	struct pumaListExtraKernelData* extraDataDetails;
+	void** extraData;
+};
+
+static void _runKernelWorker(void* voidArg)
+{
+	struct _runKernelArg* arg = (struct _runKernelArg*)voidArg;
+	int thread = _pumaGetThreadPoolNumber();
+	arg->extraData[thread] = arg->extraDataDetails
+			->extraDataConstructor(arg->extraDataDetails->constructorData);
+
+	for(size_t i = 0; i < arg->numKernels; ++i)
+		_runKernelThread(arg->list, arg->kernels[i], arg->extraDataDetails,
+				arg->extraData[thread]);
+
+	arg->extraDataDetails->extraDataThreadReduce(arg->extraData[thread]);
+}
+
+static void _cleanupKernelWorker(void* voidArg)
+{
+	struct _runKernelArg* arg = (struct _runKernelArg*)voidArg;
+	int thread = _pumaGetThreadPoolNumber();
+	arg->extraDataDetails->extraDataDestructor(arg->extraData[thread]);
+}
+
 void runKernelList(struct pumaList* list, pumaKernel kernels[],
 		size_t numKernels, struct pumaListExtraKernelData* extraDataDetails)
 {
@@ -72,27 +103,19 @@ void runKernelList(struct pumaList* list, pumaKernel kernels[],
 	if(extraDataDetails == NULL)
 		extraDataDetails = &emptyKernelData;
 
-	#pragma omp parallel
-	{
-		int thread = omp_get_thread_num();
-		extraData[thread] = extraDataDetails->extraDataConstructor(
-				extraDataDetails->constructorData);
+	struct _runKernelArg arg;
+	arg.list = list;
+	arg.kernels = kernels;
+	arg.numKernels = numKernels;
+	arg.extraDataDetails = extraDataDetails;
+	arg.extraData = extraData;
 
-		for(size_t i = 0; i < numKernels; ++i)
-			_runKernelThread(list, kernels[i], extraDataDetails,
-					extraData[thread]);
+	_executeOnThreadPool(list->threadPool, _runKernelWorker, (void*)extraData);
 
-		extraDataDetails->extraDataThreadReduce(extraData[thread]);
+	extraDataDetails->extraDataReduce(extraDataDetails->retValue,
+			extraData, numThreads);
 
-		#pragma omp barrier
-		#pragma omp single
-		{
-			extraDataDetails->extraDataReduce(extraDataDetails->retValue,
-					extraData, numThreads);
-		}
-
-		extraDataDetails->extraDataDestructor(extraData[thread]);
-	}
+	_executeOnThreadPool(list->threadPool, _cleanupKernelWorker, (void*)extraData);
 }
 
 void runKernel(struct pumaList* list, pumaKernel kernel,

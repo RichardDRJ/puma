@@ -59,15 +59,15 @@ all: $(TARGET) test
 $(FOLDERS):
 	@mkdir -p $(FOLDERS)
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) | $(FOLDERS)
 	@echo "Linking $@"
 	@$(LINKER) -o $@ $^ $(LDFLAGS)
 
-$(BUILDDIR)/%.cpp.o: src/%.cpp $(FOLDERS)
+$(BUILDDIR)/%.cpp.o: src/%.cpp | $(FOLDERS)
 	@echo "Compiling $<"
 	@$(CXX) $(INCFLAGS) $(DEFS) $(CXXFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.c.o: src/%.c $(FOLDERS)
+$(BUILDDIR)/%.c.o: src/%.c | $(FOLDERS)
 	@echo "Compiling $<"
 	@$(CC) $(INCFLAGS) $(DEFS) $(CFLAGS) -c $< -o $@
 

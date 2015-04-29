@@ -15,6 +15,8 @@ struct pumaThreadList
 	bool active;
 	int numaDomain;
 
+	size_t elementSize;
+
 	size_t toNodes;
 	size_t fromNodes;
 
@@ -22,5 +24,6 @@ struct pumaThreadList
 };
 
 struct pumaThreadList* _getListForCurrentThread(struct pumaList* list);
+void _emptyThreadList(struct pumaThreadList* tl);
 
 #endif // _PUMALIST__PUMA_THREAD_LIST_H_

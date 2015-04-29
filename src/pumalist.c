@@ -7,10 +7,11 @@
 #include "internal/pumathreadlist.h"
 #include "internal/pumadomain.h"
 #include "internal/pumautil.h"
+#include "internal/pumathreadpool.h"
 
 #include <stdlib.h>
 #include <sched.h>
-#include <omp.h>
+#include <unistd.h>
 
 #include <string.h>
 
@@ -18,7 +19,21 @@
 
 #include <assert.h>
 
-struct pumaList* createPumaList(size_t elementSize)
+static void _setupThreadListsWorker(void* arg)
+{
+	struct pumaList* list = (struct pumaList*)arg;
+	int currDomain = _getCurrentNumaDomain();
+	struct pumaDomain* domain = &list->domains[currDomain];
+	size_t cpuIndex = _getCurrentCPUIndexInDomain();
+	struct pumaThreadList* tl = &domain->listsInDomain[cpuIndex];
+	tl->active = true;
+	tl->numaDomain = currDomain;
+	tl->tid = _pumaGetThreadPoolNumber();
+	tl->elementSize = list->elementSize;
+}
+
+struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
+		char* threadAffinity)
 {
 	struct pumaList* newList =
 			(struct pumaList*)malloc(sizeof(struct pumaList));
@@ -31,6 +46,7 @@ struct pumaList* createPumaList(size_t elementSize)
 	newList->elementSize = elementSize;
 	newList->threadLists = (struct pumaThreadList*)calloc(numCores, sizeof(struct pumaThreadList));
 	newList->numCores = numCores;
+	newList->threadPool = _newThreadPool(numThreads, threadAffinity);
 
 	size_t numDomains = _getNumDomains();
 	newList->numDomains = numDomains;
@@ -44,16 +60,7 @@ struct pumaList* createPumaList(size_t elementSize)
 		tl += newList->domains[i].numListsInDomain;
 	}
 
-	#pragma omp parallel
-	{
-		int currDomain = _getCurrentNumaDomain();
-		struct pumaDomain* domain = &newList->domains[currDomain];
-		size_t cpuIndex = _getCurrentCPUIndexInDomain();
-		struct pumaThreadList* tl = &domain->listsInDomain[cpuIndex];
-		tl->active = true;
-		tl->numaDomain = currDomain;
-		tl->tid = omp_get_thread_num();
-	}
+	_executeOnThreadPool(newList->threadPool, &_setupThreadListsWorker, (void*)newList);
 
 	for(size_t i = 0; i < numCores; ++i)
 		VALGRIND_MAKE_MEM_NOACCESS(newList->threadLists + i, sizeof(struct pumaThreadList));
@@ -61,109 +68,69 @@ struct pumaList* createPumaList(size_t elementSize)
 	return newList;
 }
 
+struct _getNumElementsArg
+{
+	struct pumaList* list;
+	size_t* sums;
+};
+
+static void _getNumElementsWorker(void* arg)
+{
+	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
+	struct pumaList* list = vars->list;
+	size_t thread = _pumaGetThreadPoolNumber();
+
+	int currDomain = _getCurrentNumaDomain();
+	struct pumaDomain* domain = list->domains + currDomain;
+	struct pumaThreadList* listsInDomain = domain->listsInDomain;
+	size_t numListsInDomain = domain->numListsInDomain;
+	VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
+			numListsInDomain * sizeof(struct pumaThreadList));
+
+	struct pumaThreadList* threadList =
+			listsInDomain + _getCurrentCPUIndexInDomain();
+
+	VALGRIND_MAKE_MEM_NOACCESS(listsInDomain,
+			numListsInDomain * sizeof(struct pumaThreadList));
+
+	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
+	vars->sums[thread] += threadList->numElements;
+	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
+}
+
 size_t getNumElements(struct pumaList* list)
 {
+	size_t numThreads = _getThreadPoolNumThreads(list->threadPool);
+	size_t sums[numThreads];
+	memset(sums, 0, numThreads * sizeof(size_t));
+
+	struct _getNumElementsArg arg;
+	arg.list = list;
+	arg.sums = sums;
+
+	_executeOnThreadPool(list->threadPool, &_getNumElementsWorker, (void*)(&arg));
+
 	size_t sum = 0;
 
-	#pragma omp parallel reduction(+:sum)
-	{
-		int currDomain = _getCurrentNumaDomain();
-		struct pumaDomain* domain = list->domains + currDomain;
-		struct pumaThreadList* listsInDomain = domain->listsInDomain;
-		size_t numListsInDomain = domain->numListsInDomain;
-		VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
-				numListsInDomain * sizeof(struct pumaThreadList));
-
-		struct pumaThreadList* threadList =
-				listsInDomain + _getCurrentCPUIndexInDomain();
-
-		VALGRIND_MAKE_MEM_NOACCESS(listsInDomain,
-				numListsInDomain * sizeof(struct pumaThreadList));
-
-		VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-		sum += threadList->numElements;
-		VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-	}
+	for(size_t i = 0; i < numThreads; ++i)
+		sum += sums[i];
 
 	return sum;
 }
 
-size_t getNumElementsMatcher(struct pumaList* list,
-		bool (*matcher)(void* element, void* extraData), void* extraData)
+static void _destroyThreadListWorker(void* arg)
 {
-	unsigned int numThreads = omp_get_max_threads();
-	size_t numElements[numThreads];
+	struct pumaList* list = (struct pumaList*)arg;
+	size_t thread = _pumaGetThreadPoolNumber();
+	struct pumaNode* currentNode = list->threadLists[thread].head;
 
-	for(int i = 0; i < numThreads; ++i)
-		numElements[i] = 0;
-
-	#pragma omp parallel
+	while(currentNode != NULL)
 	{
-		unsigned int thread = omp_get_thread_num();
+		destroyPumaBitmask(currentNode->freeMask);
 
-		struct pumaThreadList* threadList = &list->threadLists[thread];
-
-		VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-
-		struct pumaNode* currentNode = threadList->head;
-
-		while(currentNode != NULL && currentNode->active)
-		{
-			for(int i = 0; i < currentNode->capacity; ++i)
-			{
-				if(pumaBitmaskGet(currentNode->freeMask, i) == MASKFREE)
-					continue;
-
-				void* element = _getElement(currentNode, i);
-				if(matcher(element, extraData))
-					++numElements[thread];
-			}
-
-			currentNode = currentNode->next;
-		}
-
-		VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-	}
-
-	size_t sum = 0;
-
-	for(int i = 0; i < numThreads; ++i)
-		sum += numElements[i];
-
-	return sum;
-}
-
-void getPerThreadNumElements(struct pumaList* list, size_t numElements[])
-{
-	#pragma omp parallel
-	{
-		int currDomain = _getCurrentNumaDomain();
-		struct pumaDomain* domain = &list->domains[currDomain];
-		struct pumaThreadList* threadList =
-				&domain->listsInDomain[_getCurrentCPUIndexInDomain()];
-
-		int thread = omp_get_thread_num();
-
-		VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-		numElements[thread] = threadList->numElements;
-		VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-	}
-}
-
-void getPerThreadNumNodes(struct pumaList* list, size_t* numNodes)
-{
-	#pragma omp parallel
-	{
-		int currDomain = _getCurrentNumaDomain();
-		struct pumaDomain* domain = &list->domains[currDomain];
-		struct pumaThreadList* threadList =
-				&domain->listsInDomain[_getCurrentCPUIndexInDomain()];
-
-		int thread = omp_get_thread_num();
-
-		VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-		numNodes[thread] = threadList->numNodes;
-		VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
+		struct pumaNode* nextNode = currentNode->next;
+		free(currentNode);
+		currentNode = nextNode;
 	}
 }
 
@@ -171,19 +138,8 @@ void destroyPumaList(struct pumaList* list)
 {
 	VALGRIND_MAKE_MEM_DEFINED(list->threadLists,
 			list->numCores * sizeof(struct pumaThreadList));
-	#pragma omp parallel for
-	for(size_t i = 0; i < list->numCores; ++i)
-	{
-		struct pumaNode* currentNode = list->threadLists[i].head;
-		while(currentNode != NULL)
-		{
-			destroyPumaBitmask(currentNode->freeMask);
-
-			struct pumaNode* nextNode = currentNode->next;
-			free(currentNode);
-			currentNode = nextNode;
-		}
-	}
+	
+	_executeOnThreadPool(list->threadPool, &_destroyThreadListWorker, (void*)list);
 
 	free(list->threadLists);
 	free(list);

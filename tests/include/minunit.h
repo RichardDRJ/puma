@@ -12,7 +12,7 @@ extern int tests_failed;
 		++tests_run; \
 		tests_failed += (message != (void*)0); \
 		if(message) \
-			fprintf(stderr, "[%d]: Test %s failed: %s\n", tests_run, #test, message); \
+			fprintf(stderr, "[%d]: %s failed: %s\n", tests_run, #test, message); \
 		else \
-			printf("[%d]: Test %s passed\n", tests_run, #test); \
+			printf("[%d]: %s passed\n", tests_run, #test); \
 		} while (0)

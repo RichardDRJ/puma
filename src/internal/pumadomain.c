@@ -3,25 +3,19 @@
 
 #include "internal/pumadomain.h"
 #include "internal/numa.h"
+#include "internal/pumathreadpool.h"
 
 #include <unistd.h>
 #include <assert.h>
 #include <omp.h>
 #include <stdbool.h>
 
-bool _pinnedWithPumaInit = false;
-
 int _getCurrentNumaDomain(void)
 {
 #ifdef NNUMA
 	int node = 0;
 #else
-	int cpu;
-
-	if(_pinnedWithPumaInit)
-		cpu = omp_get_thread_num();
-	else
-		cpu = sched_getcpu();
+	int cpu = _pumaGetCPUNum();
 
 	int node = numa_node_of_cpu(cpu);
 #endif
@@ -32,14 +26,9 @@ int _getCurrentNumaDomain(void)
 size_t _getCurrentCPUIndexInDomain(void)
 {
 #ifdef NNUMA
-	size_t index = omp_get_thread_num();
+	size_t index = _pumaGetThreadPoolNumber();
 #else
-	int cpu;
-
-	if(_pinnedWithPumaInit)
-		cpu = omp_get_thread_num();
-	else
-		cpu = sched_getcpu();
+	int cpu = _pumaGetCPUNum();
 
 	int node = numa_node_of_cpu(cpu);
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+struct pumaThreadPool;
 struct pumaThreadList;
 struct pumaDomain;
 struct pumaList;
@@ -17,9 +18,12 @@ struct pumaList
 	size_t numDomains;
 	struct pumaThreadList* threadLists;
 	size_t numCores;
+
+	struct pumaThreadPool* threadPool;
 };
 
-struct pumaList* createPumaList(size_t elementSize);
+struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
+		char* threadAffinity);
 void destroyPumaList(struct pumaList* list);
 
 void getPerThreadNumElements(struct pumaList* list, size_t numElements[]);

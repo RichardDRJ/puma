@@ -53,3 +53,21 @@ size_t _getIndexOfElementOnNode(void* element, struct pumaNode* node)
 
 	return index;
 }
+
+void* _getElement(struct pumaNode* node, size_t i)
+{
+	char* arrayStart = node->elementArray;
+
+	void* element = (i * node->elementSize + arrayStart);
+
+	return element;
+}
+
+struct pumaNode* _getNodeForElement(void* element)
+{
+	struct pumaNode* node =
+			(struct pumaNode*)((size_t)element &
+			~((pumaPageSize * PUMA_NODEPAGES) - 1));
+
+	return node;
+}

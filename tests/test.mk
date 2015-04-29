@@ -25,8 +25,8 @@ TEST_INCFLAGS	:= $(addprefix -I,$(TEST_INCDIRS))
 
 TEST_DEFS		:=
 
-TEST_CFLAGS		= -std=gnu99 -Wall -Wextra -Werror -pedantic -O2
-TEST_CXXFLAGS	= -std=c++11 -Wall -Wextra -Werror -pedantic -O2
+TEST_CFLAGS		= -std=gnu99 -Wall -Wextra -Werror -pedantic -O0 -g
+TEST_CXXFLAGS	= -std=c++11 -Wall -Wextra -Werror -pedantic -O0 -g
 
 TEST_FOLDERS	= $(TEST_BINDIR) $(TEST_BINMODS) $(TEST_BUILDDIR) $(TEST_BUILDMODS)
 
@@ -39,15 +39,15 @@ test: $(TEST_TARGET)
 $(TEST_FOLDERS):
 	@mkdir -p $(TEST_FOLDERS)
 
-$(TEST_TARGET): $(TEST_OBJECTS) $(TARGET)
+$(TEST_TARGET): $(TEST_OBJECTS) $(TARGET) | $(TEST_FOLDERS)
 	@echo "Linking $@"
 	$(LINKER) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS)
 
-$(TEST_BUILDDIR)/%.cpp.o: $(TEST_SRCDIR)/%.cpp $(TEST_FOLDERS)
+$(TEST_BUILDDIR)/%.cpp.o: $(TEST_SRCDIR)/%.cpp | $(TEST_FOLDERS)
 	@echo "Compiling $<"
 	@$(CXX) $(TEST_INCFLAGS) $(TEST_DEFS) $(TEST_CXXFLAGS) -c $< -o $@
 
-$(TEST_BUILDDIR)/%.c.o: $(TEST_SRCDIR)/%.c $(TEST_FOLDERS)
+$(TEST_BUILDDIR)/%.c.o: $(TEST_SRCDIR)/%.c | $(TEST_FOLDERS)
 	@echo "Compiling $<"
 	@$(CC) $(TEST_INCFLAGS) $(TEST_DEFS) $(TEST_CFLAGS) -c $< -o $@
 

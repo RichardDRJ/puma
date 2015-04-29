@@ -10,14 +10,13 @@
 
 #include <omp.h>
 
-static void* _pumallocOnThreadList(struct pumaList* list,
-		struct pumaThreadList* threadList)
+void* _pumallocOnThreadList(struct pumaThreadList* threadList)
 {
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
 	struct pumaNode* tail = threadList->tail;
 
 	if(tail == NULL || tail->numElements == tail->capacity)
-		tail = _appendPumaNode(threadList, list->elementSize);
+		tail = _appendPumaNode(threadList, threadList->elementSize);
 
 	size_t freeIndex = tail->firstKnownFree++;
 
@@ -41,7 +40,7 @@ static void* _pumallocOnThreadList(struct pumaList* list,
 void* pumalloc(struct pumaList* list)
 {
 	struct pumaThreadList* threadList = _getListForCurrentThread(list);
-	return _pumallocOnThreadList(list, threadList);
+	return _pumallocOnThreadList(threadList);
 }
 
 void* pumallocBalancing(struct pumaList* list, int* allocatedThread)
@@ -70,7 +69,7 @@ void* pumallocOnThread(struct pumaList* list, size_t thread)
 {
 	struct pumaThreadList* threadList = list->threadLists + thread;
 
-	return _pumallocOnThreadList(list, threadList);
+	return _pumallocOnThreadList(threadList);
 }
 
 void pufree(void* element)

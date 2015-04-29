@@ -169,7 +169,6 @@ void _balanceThreadLoad(struct pumaList* list)
 	long avgNodes = 0;
 	size_t numLists = 0;
 
-	#pragma omp parallel for reduction(+:avgNodes,numLists)
 	for(size_t i = 0; i < list->numCores; ++i)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;

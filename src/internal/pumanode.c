@@ -124,6 +124,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 				"Puma compilation.", elementSize, nodeSize);
 		exit(-1);
 	}
+
 	retNode->elementSize = elementSize;
 	retNode->blockSize = nodeSize;
 	retNode->numPages = nodeSize / pumaPageSize;
