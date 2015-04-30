@@ -5,6 +5,7 @@
 #include "internal/pumanode.h"
 #include "internal/pumabalance.h"
 #include "internal/pumathreadlist.h"
+#include "internal/profiling.h"
 #include "pumathreadpool.h"
 
 #include <assert.h>
@@ -31,20 +32,30 @@ static void _runKernelOnNode(struct pumaNode* node,
 static void _runKernelThread(struct pumaList* list, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails, void* extraData)
 {
-	struct pumaThreadList* threadList = _getListForCurrentThread(list);
-	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-	struct pumaNode* currentNode = threadList->head;
-	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
+	struct pumaThreadList* tl = _getListForCurrentThread(list);
+	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
+	struct pumaNode* currentNode = tl->head;
+	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 
+	PROFILING_DECLS(runKernel);
+	PROFILE(runKernel,
 	while(currentNode != NULL && currentNode->active)
 	{
 		if(currentNode->dirty)
-			_cleanupNode(currentNode, threadList);
+			_cleanupNode(currentNode, tl);
 
 		_runKernelOnNode(currentNode, kernel, extraData);
 
 		currentNode = currentNode->next;
 	}
+	)
+	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
+	tl->totalRunTime -= tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->kernelRunTimes[tl->nextRunTimeSlot] = GET_ELAPSED_S(runKernel);
+	tl->totalRunTime += tl->kernelRunTimes[tl->nextRunTimeSlot];
+	++tl->nextRunTimeSlot;
+	tl->nextRunTimeSlot %= NUM_KERNEL_RUNTIMES;
+	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 }
 
 void runKernelCurrentThread(struct pumaList* list, pumaKernel kernel,

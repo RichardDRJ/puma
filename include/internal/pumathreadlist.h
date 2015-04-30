@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "internal/pumanode.h"
 
+#define NUM_KERNEL_RUNTIMES 5
+
 struct pumaList;
 
 struct pumaThreadList
@@ -21,6 +23,11 @@ struct pumaThreadList
 	size_t fromNodes;
 
 	int tid;
+
+	double relativeSpeed;
+	double totalRunTime;
+	size_t nextRunTimeSlot;
+	double kernelRunTimes[NUM_KERNEL_RUNTIMES];
 };
 
 struct pumaThreadList* _getListForCurrentThread(struct pumaList* list);

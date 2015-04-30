@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 
 struct _threadPoolWorkerInfo
 {
@@ -37,7 +38,11 @@ static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
 size_t pumaGetThreadNum(void)
 {
-	return *((size_t*)pthread_getspecific(threadNumKey));
+	void* ptr = pthread_getspecific(cpuNumKey);
+	if(ptr != NULL)
+		return *((size_t*)ptr);
+	else
+		return 0;
 }
 
 size_t pumaGetNumThreads(struct pumaThreadPool* pool)
@@ -50,7 +55,11 @@ size_t pumaGetNumThreads(struct pumaThreadPool* pool)
 
 size_t pumaGetCPUNum(void)
 {
-	return *((size_t*)pthread_getspecific(cpuNumKey));
+	void* ptr = pthread_getspecific(cpuNumKey);
+	if(ptr != NULL)
+		return *((size_t*)ptr);
+	else
+		return 0;
 }
 
 #ifdef __linux__
@@ -142,7 +151,7 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 	struct pumaThreadPool* threadPool =
 			(struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
 
-	threadPool->numThreads = numThreads;
+	threadPool->numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
 	threadPool->threads = (pthread_t*)calloc(numThreads, sizeof(pthread_t));
 	pthread_barrier_init(&threadPool->workWaitBarrier, NULL, numThreads + 1);
 	pthread_barrier_init(&threadPool->doneBarrier, NULL, numThreads + 1);

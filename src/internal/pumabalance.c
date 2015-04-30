@@ -168,13 +168,24 @@ void _balanceThreadLoad(struct pumaList* list)
 {
 	long avgNodes = 0;
 	size_t numLists = 0;
+	double totalRunTime = 0;
 
 	for(size_t i = 0; i < list->numCores; ++i)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
+
+		totalRunTime += tl->totalRunTime;
 		avgNodes += tl->numNodes * (tl->active == true);
 		numLists += (tl->active == true);
+		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
+	}
+
+	for(size_t i = 0; i < list->numCores; ++i)
+	{
+		struct pumaThreadList* tl = list->threadLists + i;
+		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
+		tl->relativeSpeed = tl->totalRunTime / totalRunTime;
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
@@ -197,11 +208,13 @@ void _balanceThreadLoad(struct pumaList* list)
 			if(!tl->active)
 				continue;
 
-			rem -= ((rem > 0) && (tl->numNodes == avgNodes + 1));
+			size_t tlAvgNodes = (tl->relativeSpeed + 0.5) * avgNodes;
 
-			if(tl->numNodes > avgNodes + (rem > 0))
+			rem -= ((rem > 0) && (tl->numNodes == tlAvgNodes + 1));
+
+			if(tl->numNodes > tlAvgNodes + (rem > 0))
 				posStack[posStackSize++] = tl;
-			else if(tl->numNodes < avgNodes)
+			else if(tl->numNodes < tlAvgNodes)
 				negStack[negStackSize++] = tl;
 			VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 		}
@@ -210,18 +223,20 @@ void _balanceThreadLoad(struct pumaList* list)
 		{
 			VALGRIND_MAKE_MEM_DEFINED(negStack[negStackSize - 1], sizeof(struct pumaThreadList));
 			VALGRIND_MAKE_MEM_DEFINED(posStack[posStackSize - 1], sizeof(struct pumaThreadList));
+			size_t posAvgNodes = (posStack[posStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
+			size_t negAvgNodes = (negStack[negStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
 			size_t nToTransfer =
-					_min(avgNodes - negStack[negStackSize - 1]->numNodes,
-					posStack[posStackSize - 1]->numNodes - (avgNodes + (rem > 0)));
+					_min(negAvgNodes - negStack[negStackSize - 1]->numNodes,
+					posStack[posStackSize - 1]->numNodes - (posAvgNodes + (rem > 0)));
 
 			_transferNNodes(nToTransfer, posStack[posStackSize - 1],
 					negStack[negStackSize - 1]);
 
-			bool posIsTarget = (posStack[posStackSize - 1]->numNodes == avgNodes + (rem > 0));
+			bool posIsTarget = (posStack[posStackSize - 1]->numNodes == posAvgNodes + (rem > 0));
 			rem -= ((rem > 0) && posIsTarget);
 			posStackSize -= (posIsTarget);
 
-			bool negIsTarget = (negStack[negStackSize - 1]->numNodes == avgNodes);
+			bool negIsTarget = (negStack[negStackSize - 1]->numNodes == negAvgNodes);
 			negStackSize -= (negIsTarget);
 			VALGRIND_MAKE_MEM_NOACCESS(negStack[negStackSize - 1], sizeof(struct pumaThreadList));
 			VALGRIND_MAKE_MEM_NOACCESS(posStack[posStackSize - 1], sizeof(struct pumaThreadList));
