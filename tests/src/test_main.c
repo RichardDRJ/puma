@@ -1,6 +1,7 @@
 #include "minunit.h"
 
 #include "puma.h"
+#include "test_pumakernel.h"
 #include "internal/test_pumautil.h"
 #include "internal/test_bitmask.h"
 #include <unistd.h>
@@ -19,6 +20,7 @@ int main(void)
 	mu_run_test(test_getLastIndexOfValueIsCorrect);
 	mu_run_test(test_getLastElementGetsLastElement);
 	mu_run_test(test_getIndexOfElementAndGetElementAreEquivalent);
+	mu_run_test(test_runKernelIteratesOverAll);
 
 	return (tests_failed != 0);
 }

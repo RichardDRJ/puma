@@ -12,7 +12,7 @@ void _allocElementOnNode(struct pumaNode* node, void* element)
 {
 	assert(node == _getNodeForElement(element));
 
-	node->dirty = true;
+	// node->dirty = true;
 
 	assert(node->active);
 

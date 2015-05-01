@@ -135,24 +135,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	retNode->next = NULL;
 	retNode->pageUnit = pumaPageSize * ((retNode->elementSize + pumaPageSize - 1) / pumaPageSize);
 
-	void* firstElemSecondPage = (char*)retNode + pumaPageSize + sizeof(struct pumaHeader);
-
-	if(tail != NULL && tail->blockSize == nodeSize)
-	{
-		retNode->firstSkipIndex = tail->firstSkipIndex;
-		retNode->elemsPerPageUnit = tail->elemsPerPageUnit;
-	}
-	else
-	{
-		retNode->firstSkipIndex =
-				_getIndexOfElementOnNode(firstElemSecondPage, retNode);
-		retNode->elemsPerPageUnit =
-				_getIndexOfElementOnNode(firstElemSecondPage + retNode->pageUnit,
-						retNode) - retNode->firstSkipIndex;
-	}
-
-	retNode->capacity =
-			_getIndexOfElementOnNode((char*)retNode + nodeSize + sizeof(struct pumaHeader), retNode);
+	retNode->capacity = elementArraySize / elementSize;
 
 	threadList->tail = retNode;
 

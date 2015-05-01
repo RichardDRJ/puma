@@ -125,6 +125,7 @@ void _transferNNodes(size_t n, struct pumaThreadList* from,
 		if(end->next != NULL)
 			end->next->prev = end;
 		to->tail->next = start;
+		to->tail->dirty = true;
 		start->prev = to->tail;
 	}
 	else
