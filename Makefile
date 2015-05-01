@@ -22,29 +22,28 @@ OBJECTS		:= $(COBJECTS) $(CXXOBJECTS)
 
 INCFLAGS	= $(addprefix -I,$(INCDIRS))
 
-CFLAGS		= -axSSE4.1 -std=gnu99 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -fPIC -pthread
-CXXFLAGS	= -axSSE4.1 -std=c++11 -Wunused-variable -O2 -DNOVALGRIND -DNDEBUG -fPIC -pthread
+CFLAGS		= -std=gnu99 -Wunused-variable -O2 -DNDEBUG -fPIC -pthread
+CXXFLAGS	= -std=c++11 -Wunused-variable -O2 -DNDEBUG -fPIC -pthread
 
-LINKER		= icc
 LDFLAGS		= -shared -pthread
 
 FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
-	LDFLAGS +=		-lnuma
+	CFLAGS		+= -axSSE4.1
+	CXXFLAGS	+= -axSSE4.1
+	LDFLAGS		+= -lnuma
 	CC			= icc -x c
 	CXX			= icc -x c++ -cxxlib
+	LINKER		= icc
 	EXT			= so
 else ifeq ($(OS),Darwin)
-	CFLAGS += -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/include
-	CXXFLAGS += -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/include
-	LDFLAGS += -L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib
-	CYTHONINCS += /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/include
-	CYTHONLIBS += /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib
-	CFLAGS 		+= -DNNUMA
-	CC			= icc
-	CXX			= icc -cxxlib
+	CFLAGS 		+= -DNNUMA -DNOVALGRIND
+	CXXFLAGS	+= -DNNUMA -DNOVALGRIND
+	CC			= gcc
+	CXX			= g++
+	LINKER		= gcc
 	EXT			= dylib
 endif
 
@@ -60,8 +59,8 @@ $(FOLDERS):
 	@mkdir -p $(FOLDERS)
 
 $(TARGET): $(OBJECTS) | $(FOLDERS)
-	@echo "Linking $@"
-	@$(LINKER) -o $@ $^ $(LDFLAGS)
+	echo "Linking $@"
+	$(LINKER) -o $@ $^ $(LDFLAGS)
 
 $(BUILDDIR)/%.cpp.o: src/%.cpp | $(FOLDERS)
 	@echo "Compiling $<"

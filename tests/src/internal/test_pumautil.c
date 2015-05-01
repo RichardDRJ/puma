@@ -1,5 +1,6 @@
 #include "minunit.h"
 #include <stdlib.h>
+#include <string.h>
 #include "pumalloc.h"
 #include "internal/pumathreadlist.h"
 #include "internal/pumautil.h"

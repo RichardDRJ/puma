@@ -19,7 +19,7 @@ static void _puma_listExtraDataReduce(void* retValue, void* data[],
 		struct puma_linkedList* currentList = (struct puma_linkedList*)data[i];
 		void* element;
 
-		while(element = puma_popHeadFromLinkedList(currentList))
+		while( (element = puma_popHeadFromLinkedList(currentList)) )
 			puma_insertIntoLinkedList(retList, element, NULL);
 	}
 }

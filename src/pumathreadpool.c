@@ -2,7 +2,7 @@
 #include <sched.h>
 
 #include "pumathreadpool.h"
-
+#include "internal/pthreadbarrier.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
