@@ -34,10 +34,11 @@ static void _setupThreadListsWorker(void* arg)
 }
 
 void pumaListSetBalancer(struct pumaList* list, bool autoBalance,
-		splitterFunc splitter)
+		splitterFunc splitter, void* splitterExtraData)
 {
 	list->autoBalance = autoBalance;
 	list->splitter = splitter;
+	list->splitterExtraData = splitterExtraData;
 }
 
 struct pumaList* createPumaList(size_t elementSize, size_t numThreads,

@@ -10,7 +10,7 @@ struct pumaThreadList;
 struct pumaDomain;
 struct pumaList;
 
-typedef size_t (*splitterFunc)(void* balData, size_t numThreads);
+typedef size_t (splitterFunc)(void* balData, size_t numThreads, void* extraData);
 
 struct pumaList
 {
@@ -25,7 +25,8 @@ struct pumaList
 	size_t* threadListToIndex;
 
 	bool autoBalance;
-	splitterFunc splitter;
+	splitterFunc* splitter;
+	void* splitterExtraData;
 
 	struct pumaThreadPool* threadPool;
 };
@@ -40,6 +41,6 @@ size_t getNumElementsMatcher(struct pumaList* list,
 		bool (*matcher)(void* element, void* extraData), void* extraData);
 void getPerThreadNumNodes(struct pumaList* list, size_t* numNodes);
 void pumaListSetBalancer(struct pumaList* list, bool autoBalance,
-		splitterFunc splitter);
+		splitterFunc* splitter, void* splitterExtraData);
 
 #endif // __PUMALIST__PUMALIST_H__
