@@ -165,7 +165,7 @@ size_t _min(size_t a, size_t b)
 	return (a < b) * a + (a >= b) * b;
 }
 
-void _balanceThreadLoad(struct pumaList* list)
+static void _autobalanceThreadLoad(struct pumaList* list)
 {
 	long avgNodes = 0;
 	size_t numLists = 0;
@@ -243,4 +243,10 @@ void _balanceThreadLoad(struct pumaList* list)
 			VALGRIND_MAKE_MEM_NOACCESS(posStack[posStackSize - 1], sizeof(struct pumaThreadList));
 		}
 	}
+}
+
+void _balanceThreadLoad(struct pumaList* list)
+{
+	if(list->autoBalance)
+		_autobalanceThreadLoad(list);
 }

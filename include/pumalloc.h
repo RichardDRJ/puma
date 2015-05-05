@@ -6,7 +6,8 @@
 #include <stdlib.h>
 
 void* pumalloc(struct pumaList* list);
-void* pumallocBalancing(struct pumaList* list, int* allocatedThread);
+void* pumallocManualBalancing(struct pumaList* list, void* balData);
+void* pumallocAutoBalancing(struct pumaList* list, int* allocatedThread);
 void* pumallocOnThread(struct pumaList* list, size_t thread);
 void pufree(void* element);
 

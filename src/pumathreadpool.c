@@ -38,7 +38,7 @@ static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
 size_t pumaGetThreadNum(void)
 {
-	void* ptr = pthread_getspecific(cpuNumKey);
+	void* ptr = pthread_getspecific(threadNumKey);
 	if(ptr != NULL)
 		return *((size_t*)ptr);
 	else

@@ -29,7 +29,15 @@ static void _setupThreadListsWorker(void* arg)
 	tl->active = true;
 	tl->numaDomain = currDomain;
 	tl->tid = pumaGetThreadNum();
+	list->threadListToIndex[(size_t)(tl - list->threadLists)] = tl->tid;
 	tl->elementSize = list->elementSize;
+}
+
+void pumaListSetBalancer(struct pumaList* list, bool autoBalance,
+		splitterFunc splitter)
+{
+	list->autoBalance = autoBalance;
+	list->splitter = splitter;
 }
 
 struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
@@ -46,7 +54,9 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 	newList->elementSize = elementSize;
 	newList->threadLists = (struct pumaThreadList*)calloc(numCores, sizeof(struct pumaThreadList));
 	newList->numCores = numCores;
+	newList->numThreads = numThreads;
 	newList->threadPool = newThreadPool(numThreads, threadAffinity);
+	newList->threadListToIndex = calloc(numThreads, sizeof(size_t));
 
 	size_t numDomains = _getNumDomains();
 	newList->numDomains = numDomains;

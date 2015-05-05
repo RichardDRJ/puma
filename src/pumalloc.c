@@ -36,13 +36,21 @@ void* _pumallocOnThreadList(struct pumaThreadList* threadList)
 	return newElement;
 }
 
+void* pumallocManualBalancing(struct pumaList* list, void* balData)
+{
+	size_t index = list->splitter(balData, list->numThreads);
+	size_t adjustedIndex = list->threadListToIndex[index];
+	struct pumaThreadList* threadList = &list->threadLists[adjustedIndex];
+	return _pumallocOnThreadList(threadList);
+}
+
 void* pumalloc(struct pumaList* list)
 {
 	struct pumaThreadList* threadList = _getListForCurrentThread(list);
 	return _pumallocOnThreadList(threadList);
 }
 
-void* pumallocBalancing(struct pumaList* list, int* allocatedThread)
+void* pumallocAutoBalancing(struct pumaList* list, int* allocatedThread)
 {
 	size_t minThread = 0;
 
