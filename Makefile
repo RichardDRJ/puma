@@ -22,8 +22,8 @@ OBJECTS		:= $(COBJECTS) $(CXXOBJECTS)
 
 INCFLAGS	= $(addprefix -I,$(INCDIRS))
 
-CFLAGS		= -std=gnu99 -Wunused-variable -O2 -DNDEBUG -fPIC
-CXXFLAGS	= -std=c++11 -Wunused-variable -O2 -DNDEBUG -fPIC
+CFLAGS		= -std=gnu99 -Wunused-variable -O0 -g -DNDEBUG -fPIC
+CXXFLAGS	= -std=c++11 -Wunused-variable -O0 -g -DNDEBUG -fPIC
 
 LDFLAGS		= -shared -pthread
 

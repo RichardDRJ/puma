@@ -11,6 +11,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
+static pthread_once_t offsetKeyOnce = PTHREAD_ONCE_INIT;
+static pthread_key_t timeOffsetKey;
+
 struct _threadPoolWorkerInfo
 {
 	struct pumaThreadPool* pool;
@@ -103,6 +106,12 @@ static inline size_t _max(size_t a, size_t b)
 	return (a > b) * a + (a <= b) * b;
 }
 
+static void _makeTimeKey(void)
+{
+	pthread_key_create(&timeOffsetKey, NULL);
+	pthread_setspecific(timeOffsetKey, malloc(sizeof(double)));
+}
+
 void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg)
 {
@@ -114,6 +123,9 @@ void executeOnThreadPool(struct pumaThreadPool* tp,
 	tp->timeSeconds = 0;
 	for(size_t i = 0; i < tp->numThreads; ++i)
 		tp->timeSeconds = _max(tp->threadsInfo[i]->timeSeconds, tp->timeSeconds);
+
+	(void)pthread_once(&offsetKeyOnce, &_makeTimeKey);
+	*(double*)pthread_getspecific(timeOffsetKey) += tp->timeSeconds;
 }
 
 static void* _threadPoolWorker(void* arg)
@@ -226,6 +238,14 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 	}
 
 	return threadPool;
+}
+
+double pumaGetTimeWaitedForPool(void)
+{
+	void* ptr = pthread_getspecific(timeOffsetKey);
+	if(ptr != NULL)
+		return *((double*)ptr);
+	return 0;
 }
 
 void freeThreadPool(struct pumaThreadPool* pool)

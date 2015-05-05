@@ -17,6 +17,7 @@ void freeThreadPool(struct pumaThreadPool* pool);
 size_t pumaGetNumThreads(struct pumaThreadPool* pool);
 size_t pumaGetCPUNum(void);
 double pumaGetLastExecutionTime(struct pumaThreadPool* pool);
+double pumaGetTimeWaitedForPool(void);
 
 #ifdef __cplusplus
 }
