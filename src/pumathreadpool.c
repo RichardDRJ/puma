@@ -2,6 +2,7 @@
 #include <sched.h>
 
 #include "pumathreadpool.h"
+#include "internal/profiling.h"
 #include "internal/pthreadbarrier.h"
 #include <stdlib.h>
 #include <stdbool.h>
@@ -15,6 +16,7 @@ struct _threadPoolWorkerInfo
 	struct pumaThreadPool* pool;
 	size_t cpu;
 	size_t threadNum;
+	double timeSeconds;
 };
 
 struct pumaThreadPool
@@ -22,13 +24,14 @@ struct pumaThreadPool
 	size_t numThreads;
 	pthread_t* threads;
 
-	struct _threadPoolWorkerInfo* threadsInfo;
+	struct _threadPoolWorkerInfo** threadsInfo;
 
 	pthread_barrier_t workWaitBarrier;
 	pthread_barrier_t doneBarrier;
 
 	void (*workFunction)(void* arg);
 	void* arg;
+	double timeSeconds;
 };
 
 static pthread_key_t numThreadsKey;
@@ -95,6 +98,11 @@ static void _parseAffinityStr(char* affinityStr, cpu_set_t* set)
 }
 #endif
 
+static inline size_t _max(size_t a, size_t b)
+{
+	return (a > b) * a + (a <= b) * b;
+}
+
 void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg)
 {
@@ -102,6 +110,10 @@ void executeOnThreadPool(struct pumaThreadPool* tp,
 	tp->arg = arg;
 	pthread_barrier_wait(&tp->workWaitBarrier);
 	pthread_barrier_wait(&tp->doneBarrier);
+
+	tp->timeSeconds = 0;
+	for(size_t i = 0; i < tp->numThreads; ++i)
+		tp->timeSeconds = _max(tp->threadsInfo[i]->timeSeconds, tp->timeSeconds);
 }
 
 static void* _threadPoolWorker(void* arg)
@@ -120,6 +132,8 @@ static void* _threadPoolWorker(void* arg)
 	sched_setaffinity(0, sizeof(set), &set);
 #endif
 
+	PROFILING_DECLS(doWork);
+
 	while(true)
 	{
 		// pthread_mutex_lock(&info->workFunctionMutex)
@@ -133,7 +147,9 @@ static void* _threadPoolWorker(void* arg)
 		// info->workFunction = NULL:
 		// pthread_mutex_unlock(&info->workFunctionMutex)
 
-		workFunction(arg);
+		PROFILE(doWork, workFunction(arg);)
+
+		info->timeSeconds = GET_ELAPSED_S(doWork);
 
 		pthread_barrier_wait(&pool->doneBarrier);
 	}
@@ -153,6 +169,9 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 
 	threadPool->numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
 	threadPool->threads = (pthread_t*)calloc(numThreads, sizeof(pthread_t));
+	threadPool->threadsInfo =
+			(struct _threadPoolWorkerInfo**)calloc(numThreads,
+					sizeof(struct _threadPoolWorkerInfo*));
 	pthread_barrier_init(&threadPool->workWaitBarrier, NULL, numThreads + 1);
 	pthread_barrier_init(&threadPool->doneBarrier, NULL, numThreads + 1);
 
@@ -180,6 +199,8 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 				tpInfo->cpu = i;
 				tpInfo->threadNum = currThread;
 
+				threadPool->threadsInfo[currThread] = tpInfo;
+
 				pthread_create(&threadPool->threads[currThread++], NULL,
 						&_threadPoolWorker, tpInfo);
 			}
@@ -196,6 +217,8 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 			tpInfo->pool = threadPool;
 			tpInfo->cpu = i;
 			tpInfo->threadNum = currThread;
+
+			threadPool->threadsInfo[currThread] = tpInfo;
 
 			pthread_create(&threadPool->threads[currThread++], NULL,
 					&_threadPoolWorker, tpInfo);
@@ -214,4 +237,9 @@ void freeThreadPool(struct pumaThreadPool* pool)
 	pthread_barrier_destroy(&pool->workWaitBarrier);
 	pthread_barrier_destroy(&pool->doneBarrier);
 	free(pool);
+}
+
+double pumaGetLastExecutionTime(struct pumaThreadPool* pool)
+{
+	return pool->timeSeconds;
 }

@@ -45,6 +45,7 @@
 		#include <mach/mach_init.h>
 		#include <mach/thread_act.h>
 		#include <mach/mach_port.h>
+		#include <assert.h>
 
 		#define PROFILING_DECLS(__name) mach_port_t __name##thread;				\
 				kern_return_t __name##kr;										\
