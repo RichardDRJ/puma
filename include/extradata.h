@@ -1,5 +1,11 @@
+
+
 #ifndef _PUMALIST__EXTRADATA_H_
 #define _PUMALIST__EXTRADATA_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct pumaListExtraKernelData
 {
@@ -13,5 +19,9 @@ struct pumaListExtraKernelData
 };
 
 extern struct pumaListExtraKernelData emptyKernelData;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _PUMALIST__EXTRADATA_H_

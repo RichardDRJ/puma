@@ -1,6 +1,10 @@
 #ifndef __DATA_STRUCTURES__LINKED_LIST_H__
 #define __DATA_STRUCTURES__LINKED_LIST_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -27,5 +31,9 @@ void puma_initLinkedList(struct puma_linkedList* l);
 void puma_destroyLinkedList(struct puma_linkedList* l, dataDestructor destroy);
 void puma_deleteLinkedList(struct puma_linkedList* l, dataDestructor destroy);
 bool puma_linkedlistIsOrdered(struct puma_linkedList* l, comparatorFunc comparator);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __DATA_STRUCTURES__LINKED_LIST_H__

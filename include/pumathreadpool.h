@@ -1,6 +1,10 @@
 #ifndef _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_
 #define _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 
 struct pumathreadpool;
@@ -12,5 +16,9 @@ size_t pumaGetThreadNum(void);
 void freeThreadPool(struct pumaThreadPool* pool);
 size_t pumaGetNumThreads(struct pumaThreadPool* pool);
 size_t pumaGetCPUNum(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_

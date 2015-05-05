@@ -1,6 +1,10 @@
 #ifndef __PUMALIST__PUMALIST_H__
 #define __PUMALIST__PUMALIST_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -42,5 +46,9 @@ size_t getNumElementsMatcher(struct pumaList* list,
 void getPerThreadNumNodes(struct pumaList* list, size_t* numNodes);
 void pumaListSetBalancer(struct pumaList* list, bool autoBalance,
 		splitterFunc* splitter, void* splitterExtraData);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __PUMALIST__PUMALIST_H__
