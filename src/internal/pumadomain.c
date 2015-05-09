@@ -60,11 +60,7 @@ size_t _getNumDomains(void)
 
 size_t _getNumCPUs(void)
 {
-#ifdef NNUMA
 	return sysconf(_SC_NPROCESSORS_ONLN);
-#else
-	return numa_num_task_cpus();
-#endif
 }
 
 size_t _getNumCPUsInDomain(int domain)
