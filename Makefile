@@ -51,9 +51,11 @@ TARGET		:= $(BINDIR)/libpumalist.$(EXT)
 
 include tests/test.mk
 
-.PHONY: all clean
+.PHONY: all clean no_test
 
 all: $(TARGET) test
+
+no_test: $(TARGET)
 
 $(FOLDERS):
 	@mkdir -p $(FOLDERS)
