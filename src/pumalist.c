@@ -29,7 +29,7 @@ static void _setupThreadListsWorker(void* arg)
 	tl->active = true;
 	tl->numaDomain = currDomain;
 	tl->tid = pumaGetThreadNum();
-	list->threadListToIndex[(size_t)(tl - list->threadLists)] = tl->tid;
+	list->threadListToIndex[tl->tid] = (size_t)(tl - list->threadLists);
 	tl->elementSize = list->elementSize;
 }
 
