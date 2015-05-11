@@ -33,7 +33,7 @@ OS := $(shell uname -s)
 ifeq ($(OS),Linux)
 	CFLAGS		+= -axSSE4.1
 	CXXFLAGS	+= -axSSE4.1
-	LDFLAGS		+= -lnuma -lrt
+	LDFLAGS		+= -lnuma -lrt -static-intel
 	CC			= icc -x c
 	CXX			= icc -x c++ -cxxlib
 	LINKER		= icc
