@@ -110,6 +110,7 @@ static void _makeTimeKey(void)
 {
 	pthread_key_create(&timeOffsetKey, NULL);
 	pthread_setspecific(timeOffsetKey, malloc(sizeof(double)));
+	*(double*)pthread_getspecific(timeOffsetKey) = 0;
 }
 
 void executeOnThreadPool(struct pumaThreadPool* tp,
