@@ -101,7 +101,7 @@ static void _parseAffinityStr(char* affinityStr, cpu_set_t* set)
 }
 #endif
 
-static inline size_t _max(size_t a, size_t b)
+static inline double _max(double a, double b)
 {
 	return (a > b) * a + (a <= b) * b;
 }
