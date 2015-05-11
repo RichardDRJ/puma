@@ -82,6 +82,7 @@
 
 	#elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
 		#include <time.h>
+		#include "pumathreadpool.h"
 
 		#define PROFILING_DECLS(__name)											\
 				struct timespec __name##Start, __name##End;						\
