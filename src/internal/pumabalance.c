@@ -167,7 +167,7 @@ size_t _min(size_t a, size_t b)
 
 static void _autobalanceThreadLoad(struct pumaList* list)
 {
-	long avgNodes = 0;
+	long totalNodes = 0;
 	size_t numLists = 0;
 	double totalRunTime = 0;
 
@@ -177,7 +177,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 
 		totalRunTime += tl->totalRunTime;
-		avgNodes += tl->numNodes * (tl->active == true);
+		totalNodes += tl->numNodes * (tl->active == true);
 		numLists += (tl->active == true);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
@@ -186,7 +186,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-		tl->relativeSpeed = tl->totalRunTime / totalRunTime;
+		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
@@ -196,8 +196,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	struct pumaThreadList* posStack[numLists];
 	size_t posStackSize = 0;
 
-	size_t rem = avgNodes % numLists;
-	avgNodes /= numLists;
+	size_t rem = totalNodes % numLists;
 
 	for(size_t d = 0; d < list->numDomains; ++d)
 	{
@@ -209,7 +208,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 			if(!tl->active)
 				continue;
 
-			size_t tlAvgNodes = (tl->relativeSpeed + 0.5) * avgNodes;
+			size_t tlAvgNodes = (tl->relativeSpeed) * totalNodes;
 
 			rem -= ((rem > 0) && (tl->numNodes == tlAvgNodes + 1));
 
@@ -224,8 +223,8 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 		{
 			VALGRIND_MAKE_MEM_DEFINED(negStack[negStackSize - 1], sizeof(struct pumaThreadList));
 			VALGRIND_MAKE_MEM_DEFINED(posStack[posStackSize - 1], sizeof(struct pumaThreadList));
-			size_t posAvgNodes = (posStack[posStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
-			size_t negAvgNodes = (negStack[negStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
+			size_t posAvgNodes = (posStack[posStackSize - 1]->relativeSpeed) * totalNodes;
+			size_t negAvgNodes = (negStack[negStackSize - 1]->relativeSpeed) * totalNodes;
 			size_t nToTransfer =
 					_min(negAvgNodes - negStack[negStackSize - 1]->numNodes,
 					posStack[posStackSize - 1]->numNodes - (posAvgNodes + (rem > 0)));
