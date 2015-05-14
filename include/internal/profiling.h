@@ -92,12 +92,12 @@
 
 		#define PROFILE_PREFIX(__name)											\
 				__name##StartOffset = pumaGetTimeWaitedForPool();				\
-				clock_gettime(CLOCK_MONOTONIC, &__name##Start);					\
+				clock_gettime(CLOCK_THREAD_CPUTIME_ID, &__name##Start);					\
 				PCM_PROFILE_PREFIX(__name);
 
 		#define PROFILE_SUFFIX(__name)											\
 				PCM_PROFILE_SUFFIX(__name)										\
-				clock_gettime(CLOCK_MONOTONIC, &__name##End);					\
+				clock_gettime(CLOCK_THREAD_CPUTIME_ID, &__name##End);					\
 				__name##EndOffset = pumaGetTimeWaitedForPool();
 
 
