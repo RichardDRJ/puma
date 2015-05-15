@@ -86,6 +86,39 @@ struct _getNumElementsArg
 	size_t* sums;
 };
 
+static void _getNumNodesWorker(void* arg)
+{
+	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
+	struct pumaList* list = vars->list;
+	size_t thread = pumaGetThreadNum();
+
+	int currDomain = _getCurrentNumaDomain();
+	struct pumaDomain* domain = list->domains + currDomain;
+	struct pumaThreadList* listsInDomain = domain->listsInDomain;
+	size_t numListsInDomain = domain->numListsInDomain;
+	VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
+			numListsInDomain * sizeof(struct pumaThreadList));
+
+	struct pumaThreadList* threadList =
+			listsInDomain + _getCurrentCPUIndexInDomain();
+
+	VALGRIND_MAKE_MEM_NOACCESS(listsInDomain,
+			numListsInDomain * sizeof(struct pumaThreadList));
+
+	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
+	vars->sums[thread] = threadList->numNodes;
+	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
+}
+
+void getPerThreadNumNodes(struct pumaList* list, size_t* numNodes)
+{
+	struct _getNumElementsArg arg;
+	arg.list = list;
+	arg.sums = numNodes;
+
+	executeOnThreadPool(list->threadPool, &_getNumNodesWorker, (void*)(&arg));
+}
+
 static void _getNumElementsWorker(void* arg)
 {
 	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;

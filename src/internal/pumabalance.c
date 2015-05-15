@@ -186,7 +186,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-		tl->relativeSpeed = tl->totalRunTime / totalRunTime;
+		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
@@ -209,7 +209,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 			if(!tl->active)
 				continue;
 
-			size_t tlAvgNodes = (tl->relativeSpeed + 0.5) * avgNodes;
+			size_t tlAvgNodes = (tl->relativeSpeed) * avgNodes;
 
 			rem -= ((rem > 0) && (tl->numNodes == tlAvgNodes + 1));
 
@@ -224,8 +224,8 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 		{
 			VALGRIND_MAKE_MEM_DEFINED(negStack[negStackSize - 1], sizeof(struct pumaThreadList));
 			VALGRIND_MAKE_MEM_DEFINED(posStack[posStackSize - 1], sizeof(struct pumaThreadList));
-			size_t posAvgNodes = (posStack[posStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
-			size_t negAvgNodes = (negStack[negStackSize - 1]->relativeSpeed + 0.5) * avgNodes;
+			size_t posAvgNodes = (posStack[posStackSize - 1]->relativeSpeed) * avgNodes;
+			size_t negAvgNodes = (negStack[negStackSize - 1]->relativeSpeed) * avgNodes;
 			size_t nToTransfer =
 					_min(negAvgNodes - negStack[negStackSize - 1]->numNodes,
 					posStack[posStackSize - 1]->numNodes - (posAvgNodes + (rem > 0)));
