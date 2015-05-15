@@ -134,9 +134,17 @@ static void* _threadPoolWorker(void* arg)
 	struct _threadPoolWorkerInfo* info = (struct _threadPoolWorkerInfo*)arg;
 	struct pumaThreadPool* pool = info->pool;
 
-	pthread_setspecific(numThreadsKey, &pool->numThreads);
-	pthread_setspecific(threadNumKey, &info->threadNum);
-	pthread_setspecific(cpuNumKey, &info->cpu);
+	/*	Local stack copy because each pthreads thread has its own stack and we
+		don't do cross-thread stack writes, meaning that the stack's pages will
+		be numa domain local due to first-touch paging.
+	*/
+	size_t numThreads = pool->numThreads;
+	size_t threadNum = info->threadNum;
+	size_t cpu = info->cpu;
+
+	pthread_setspecific(numThreadsKey, &numThreads);
+	pthread_setspecific(threadNumKey, &threadNum);
+	pthread_setspecific(cpuNumKey, &cpu);
 
 #ifdef __linux__
 	cpu_set_t set;
