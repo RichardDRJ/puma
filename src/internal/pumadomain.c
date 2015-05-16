@@ -15,7 +15,6 @@ int _getCurrentNumaDomain(void)
 	int node = 0;
 #else
 	int cpu = pumaGetCPUNum();
-
 	int node = numa_node_of_cpu(cpu);
 #endif
 

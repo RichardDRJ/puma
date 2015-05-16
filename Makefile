@@ -29,11 +29,18 @@ LDFLAGS		= -shared -pthread
 
 FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 
+ifdef NOOPENMP
+	CFLAGS		+= -DNOOPENMP
+else
+	CFLAGS		+= -openmp
+	LDFLAGS 	+= -openmp
+endif
+
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
 	CFLAGS		+= -axSSE4.1
 	CXXFLAGS	+= -axSSE4.1
-	LDFLAGS		+= -lnuma -lrt -static-intel
+	LDFLAGS		+= -lnuma -lrt -shared-intel
 	CC			= icc -x c
 	CXX			= icc -x c++ -cxxlib
 	LINKER		= icc

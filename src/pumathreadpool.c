@@ -11,8 +11,14 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#ifndef NOOPENMP
+#include <omp.h>
+#endif
+
+#ifdef NOOPENMP
 static pthread_once_t offsetKeyOnce = PTHREAD_ONCE_INIT;
 static pthread_key_t timeOffsetKey;
+#endif // NOOPENMP
 
 struct _threadPoolWorkerInfo
 {
@@ -37,37 +43,54 @@ struct pumaThreadPool
 	double timeSeconds;
 };
 
+#ifdef NOOPENMP
 static pthread_key_t numThreadsKey;
 static pthread_key_t threadNumKey;
 static pthread_key_t cpuNumKey;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
+#endif // NOOPENMP
 
 size_t pumaGetThreadNum(void)
 {
+#ifdef NOOPENMP
 	void* ptr = pthread_getspecific(threadNumKey);
 	if(ptr != NULL)
 		return *((size_t*)ptr);
 	else
 		return 0;
+#else
+	return omp_get_thread_num();
+#endif // NOOPENMP
 }
 
 size_t pumaGetNumThreads(struct pumaThreadPool* pool)
 {
 	if(pool == NULL)
+	{
+#ifdef NOOPENMP
 		return *((size_t*)pthread_getspecific(numThreadsKey));
+#else
+		return omp_get_max_threads();
+#endif // NOOPENMP
+	}
 	else
 		return pool->numThreads;
 }
 
 size_t pumaGetCPUNum(void)
 {
+#ifdef NOOPENMP
 	void* ptr = pthread_getspecific(cpuNumKey);
 	if(ptr != NULL)
 		return *((size_t*)ptr);
 	else
 		return 0;
+#else
+	return omp_get_thread_num();
+#endif // NOOPENMP
 }
 
+#ifdef NOOPENMP
 #ifdef __linux__
 static void _parseAffinityStr(char* affinityStr, cpu_set_t* set)
 {
@@ -112,10 +135,12 @@ static void _makeTimeKey(void)
 	pthread_setspecific(timeOffsetKey, malloc(sizeof(double)));
 	*(double*)pthread_getspecific(timeOffsetKey) = 0;
 }
+#endif // NOOPENMP
 
 void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg)
 {
+#ifdef NOOPENMP
 	tp->workFunction = workFunction;
 	tp->arg = arg;
 	pthread_barrier_wait(&tp->workWaitBarrier);
@@ -127,8 +152,15 @@ void executeOnThreadPool(struct pumaThreadPool* tp,
 
 	(void)pthread_once(&offsetKeyOnce, &_makeTimeKey);
 	*(double*)pthread_getspecific(timeOffsetKey) += tp->timeSeconds;
+#else
+	#pragma omp parallel num_threads(tp->numThreads)
+	{
+		workFunction(arg);
+	}
+#endif // NOOPENMP
 }
 
+#ifdef NOOPENMP
 static void* _threadPoolWorker(void* arg)
 {
 	struct _threadPoolWorkerInfo* info = (struct _threadPoolWorkerInfo*)arg;
@@ -157,16 +189,9 @@ static void* _threadPoolWorker(void* arg)
 
 	while(true)
 	{
-		// pthread_mutex_lock(&info->workFunctionMutex)
-		// while(info->workFunction == NULL)
-		// 	pthread_cond_wait(info->moreWorkCondition, &info->workFunctionMutex);
-
 		pthread_barrier_wait(&pool->workWaitBarrier);
 		void (*workFunction)(void* arg) = pool->workFunction;
 		void* arg = pool->arg;
-
-		// info->workFunction = NULL:
-		// pthread_mutex_unlock(&info->workFunctionMutex)
 
 		PROFILE(doWork, workFunction(arg);)
 
@@ -182,14 +207,18 @@ static void _make_keys(void)
 	pthread_key_create(&threadNumKey, NULL);
 	pthread_key_create(&cpuNumKey, NULL);
 }
+#endif // NOOPENMP
 
 struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 {
 	struct pumaThreadPool* threadPool =
 			(struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
 
-	threadPool->numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
+	numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
+	threadPool->numThreads = numThreads;
 	threadPool->threads = (pthread_t*)calloc(numThreads, sizeof(pthread_t));
+
+#ifdef NOOPENMP
 	threadPool->threadsInfo =
 			(struct _threadPoolWorkerInfo**)calloc(numThreads,
 					sizeof(struct _threadPoolWorkerInfo*));
@@ -228,7 +257,7 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 		}
 	}
 	else
-#endif
+#endif // __linux__
 	{
 		for(size_t i = 0; currThread < numThreads; ++i)
 		{
@@ -245,15 +274,30 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 					&_threadPoolWorker, tpInfo);
 		}
 	}
+#else
+	omp_set_num_threads(numThreads);
+
+	#pragma omp parallel
+	{
+#ifdef __linux__
+		cpu_set_t set;
+		CPU_ZERO(&set);
+		CPU_SET(omp_get_thread_num(), &set);
+		sched_setaffinity(0, sizeof(set), &set);
+#endif
+	}
+#endif // NOOPENMP
 
 	return threadPool;
 }
 
 double pumaGetTimeWaitedForPool(void)
 {
+#ifdef NOOPENMP
 	void* ptr = pthread_getspecific(timeOffsetKey);
 	if(ptr != NULL)
 		return *((double*)ptr);
+#endif // NOOPENMP
 	return 0;
 }
 
@@ -262,13 +306,10 @@ void freeThreadPool(struct pumaThreadPool* pool)
 	for(size_t i = 0; i < pool->numThreads; ++i)
 		(void)pthread_cancel(pool->threads[i]);
 
-	free(pool->threads);
+#ifdef NOOPENMP
 	pthread_barrier_destroy(&pool->workWaitBarrier);
 	pthread_barrier_destroy(&pool->doneBarrier);
+#endif // NOOPENMP
+	free(pool->threads);
 	free(pool);
-}
-
-double pumaGetLastExecutionTime(struct pumaThreadPool* pool)
-{
-	return pool->timeSeconds;
 }
