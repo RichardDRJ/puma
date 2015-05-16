@@ -34,11 +34,18 @@ ifdef PUMA_NODEPAGES
 	CXXFLAGS	+= -DPUMA_NODEPAGES=$(PUMA_NODEPAGES)
 endif
 
+ifdef NOOPENMP
+	CFLAGS		+= -DNOOPENMP
+else
+	CFLAGS		+= -openmp
+	LDFLAGS 	+= -openmp
+endif
+
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
 	CFLAGS		+= -axSSE4.1
 	CXXFLAGS	+= -axSSE4.1
-	LDFLAGS		+= -lnuma -lrt -static-intel
+	LDFLAGS		+= -lnuma -lrt -shared-intel
 	CC			= icc -x c
 	CXX			= icc -x c++ -cxxlib
 	LINKER		= icc
