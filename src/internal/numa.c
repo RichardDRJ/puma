@@ -8,7 +8,7 @@
 void* numalloc_local(size_t psize)
 {
 	void* ret;
-#if PUMA_NODEPAGES > 1 || !defined(NNUMA)
+#if PUMA_NODEPAGES > 1 || defined(NNUMA)
 	int status = posix_memalign(&ret, psize, psize);
 
 #ifndef NNUMA
