@@ -22,3 +22,12 @@ void* numalloc_local(size_t psize)
 
 	return ret;
 }
+
+void nufree(void* ptr, size_t size)
+{
+#if PUMA_NODEPAGES > 1 || defined(NNUMA)
+	free(ptr);
+#else
+	numa_free(ptr, size);
+#endif
+}

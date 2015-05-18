@@ -5,7 +5,7 @@
 #include "internal/pumaheader.h"
 
 #ifndef PUMA_NODEPAGES
-#define PUMA_NODEPAGES 4
+#define PUMA_NODEPAGES 1
 #endif
 
 extern size_t pumaPageSize;

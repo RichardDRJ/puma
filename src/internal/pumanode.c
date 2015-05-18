@@ -183,5 +183,5 @@ void _freePumaNode(struct pumaNode* node)
 	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
 
 	destroyPumaBitmask(node->freeMask);
-	free(node);
+	nufree(node, node->blockSize);
 }
