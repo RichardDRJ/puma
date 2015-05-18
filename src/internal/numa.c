@@ -14,11 +14,11 @@ void* numalloc_local(size_t psize)
 #ifndef NNUMA
 	numa_setlocal_memory(ret, psize);
 #endif // NNUMA
+	
+	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 #else
 	ret = numa_alloc_local(psize);
 #endif
-
-	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 
 	return ret;
 }
