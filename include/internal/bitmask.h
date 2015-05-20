@@ -11,7 +11,7 @@ struct pumaBitmask
 	size_t numElements;
 };
 
-struct pumaBitmask* createPumaBitmask(const size_t numElements,
+void createPumaBitmask(struct pumaBitmask* bm, const size_t numElements,
 		const uint8_t initialValue);
 void destroyPumaBitmask(struct pumaBitmask* bitmask);
 void pumaBitmaskSet(struct pumaBitmask* bitmask, const size_t index,

@@ -15,7 +15,7 @@ void* _getLastElement(struct pumaThreadList* list)
 
 	while(tail && tail->active)
 	{
-		lastElementIndex = pumaLastIndexOfValue(tail->freeMask, MASKNOTFREE, &found);
+		lastElementIndex = pumaLastIndexOfValue(&tail->freeMask, MASKNOTFREE, &found);
 
 		if(!found)
 		{

@@ -30,7 +30,7 @@ struct pumaNode
 	struct pumaNode* next;
 	struct pumaNode* prev;
 
-	struct pumaBitmask* freeMask;
+	struct pumaBitmask freeMask;
 	bool dirty;
 
 	bool active;

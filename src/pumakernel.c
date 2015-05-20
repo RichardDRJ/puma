@@ -16,7 +16,7 @@ static void _runKernelOnNode(struct pumaNode* node,
 
 	for(size_t i = 0; i - skippedElements < originalElements && i < node->capacity; ++i)
 	{
-		if(pumaBitmaskGet(node->freeMask, i) == MASKFREE)
+		if(pumaBitmaskGet(&node->freeMask, i) == MASKFREE)
 		{
 			++skippedElements;
 			continue;

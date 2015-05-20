@@ -14,9 +14,9 @@ void _freeElementOnNode(void* element, struct pumaNode* node)
 
 	size_t index = _getIndexOfElement(element);
 
-	assert(pumaBitmaskGet(node->freeMask, index) == MASKNOTFREE);
-	pumaBitmaskSet(node->freeMask, index, MASKFREE);
-	assert(pumaBitmaskGet(node->freeMask, index) == MASKFREE);
+	assert(pumaBitmaskGet(&node->freeMask, index) == MASKNOTFREE);
+	pumaBitmaskSet(&node->freeMask, index, MASKFREE);
+	assert(pumaBitmaskGet(&node->freeMask, index) == MASKFREE);
 
 	size_t elementSize = node->elementSize;
 

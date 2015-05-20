@@ -26,7 +26,7 @@ void _cleanupNode(struct pumaNode* currentNode,
 	while(currentNode->numElements < currentNode->capacity)
 	{
 		size_t firstFree =
-				pumaFirstIndexOfValue(currentNode->freeMask, MASKFREE, &found);
+				pumaFirstIndexOfValue(&currentNode->freeMask, MASKFREE, &found);
 
 		lastElement = _getLastElement(list);
 		if(lastElement != NULL)
@@ -144,7 +144,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	if(threadList->head == NULL)
 		threadList->head = retNode;
 
-	retNode->freeMask = createPumaBitmask(retNode->capacity, MASKFREE);
+	createPumaBitmask(&retNode->freeMask, retNode->capacity, MASKFREE);
 	retNode->dirty = false;
 
 	retNode->active = true;
@@ -181,6 +181,6 @@ void _freePumaNode(struct pumaNode* node)
 
 	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
 
-	destroyPumaBitmask(node->freeMask);
+	destroyPumaBitmask(&node->freeMask);
 	nufree(node, node->blockSize);
 }

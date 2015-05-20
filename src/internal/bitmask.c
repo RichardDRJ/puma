@@ -118,23 +118,17 @@ size_t pumaLastIndexOfValue(const struct pumaBitmask* const bitmask,
 	return -1;
 }
 
-struct pumaBitmask* createPumaBitmask(const size_t numElements,
+void createPumaBitmask(struct pumaBitmask* bm, const size_t numElements,
 		const uint8_t initialValue)
 {
-	struct pumaBitmask* newBitmask =
-			(struct pumaBitmask*)malloc(sizeof(struct pumaBitmask));
-
-	newBitmask->buckets = (uint64_t*)malloc(((numElements + 63) / 64) * sizeof(uint64_t));
+	bm->buckets = (uint64_t*)malloc(((numElements + 63) / 64) * sizeof(uint64_t));
 	uint8_t value = initialValue & 1;
 	value = ~(value - 1);
-	memset(newBitmask->buckets, value, ((numElements + 63) / 64) * sizeof(uint64_t));
-	newBitmask->numElements = numElements;
-
-	return newBitmask;
+	memset(bm->buckets, value, ((numElements + 63) / 64) * sizeof(uint64_t));
+	bm->numElements = numElements;
 }
 
 void destroyPumaBitmask(struct pumaBitmask* bitmask)
 {
 	free(bitmask->buckets);
-	free(bitmask);
 }

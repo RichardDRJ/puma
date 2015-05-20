@@ -18,9 +18,9 @@ void _allocElementOnNode(struct pumaNode* node, void* element)
 
 	size_t index = _getIndexOfElementOnNode(element, node);
 
-	assert(pumaBitmaskGet(node->freeMask, index) == MASKFREE);
-	pumaBitmaskSet(node->freeMask, index, MASKNOTFREE);
-	assert(pumaBitmaskGet(node->freeMask, index) == MASKNOTFREE);
+	assert(pumaBitmaskGet(&node->freeMask, index) == MASKFREE);
+	pumaBitmaskSet(&node->freeMask, index, MASKNOTFREE);
+	assert(pumaBitmaskGet(&node->freeMask, index) == MASKNOTFREE);
 
 	VALGRIND_MAKE_MEM_UNDEFINED(element, node->elementSize);
 	VALGRIND_MALLOCLIKE_BLOCK(element, node->elementSize, 0, true);

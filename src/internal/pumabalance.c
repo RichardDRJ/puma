@@ -198,7 +198,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
+		tl->relativeSpeed = 1;//((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
