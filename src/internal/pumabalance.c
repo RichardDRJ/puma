@@ -119,7 +119,7 @@ void _transferNNodes(size_t n, struct pumaThreadList* from,
 
 	from->tail = start->prev;
 
-	if(to->tail != NULL)
+	if(to->tail != NULL && to->tail->active)
 	{
 		end->next = to->tail->next;
 		if(end->next != NULL)
@@ -131,7 +131,12 @@ void _transferNNodes(size_t n, struct pumaThreadList* from,
 	else
 	{
 		to->head = start;
-		end->next = NULL;
+		end->next = to->tail;
+		if(to->tail != NULL)
+		{
+			to->tail->prev = end;
+			to->tail->index = end->index + 1;
+		}
 		start->prev = NULL;
 	}
 

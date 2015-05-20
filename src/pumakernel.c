@@ -8,8 +8,6 @@
 #include "internal/profiling.h"
 #include "pumathreadpool.h"
 
-#include <assert.h>
-
 static void _runKernelOnNode(struct pumaNode* node,
 		pumaKernel kernel, void* extraData)
 {
