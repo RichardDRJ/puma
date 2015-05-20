@@ -124,17 +124,18 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 		exit(-1);
 	}
 
+	createPumaBitmaskForElemArray(&retNode->freeMask,
+			(char*)retNode + sizeof(struct pumaNode), elementArraySize,
+			MASKFREE, elementSize, &retNode->elementArray, &retNode->capacity);
+
 	retNode->elementSize = elementSize;
 	retNode->blockSize = nodeSize;
 	retNode->numPages = nodeSize / pumaPageSize;
-	retNode->elementArray = ((char*)retNode) + sizeof(struct pumaNode);
 	retNode->numElements = 0;
 	retNode->firstKnownFree = 0;
 	retNode->prev = tail;
 	retNode->next = NULL;
 	retNode->pageUnit = pumaPageSize * ((retNode->elementSize + pumaPageSize - 1) / pumaPageSize);
-
-	retNode->capacity = elementArraySize / elementSize;
 
 	threadList->tail = retNode;
 
@@ -144,7 +145,6 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	if(threadList->head == NULL)
 		threadList->head = retNode;
 
-	createPumaBitmask(&retNode->freeMask, retNode->capacity, MASKFREE);
 	retNode->dirty = false;
 
 	retNode->active = true;

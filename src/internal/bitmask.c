@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <assert.h>
+
 void pumaBitmaskSet(struct pumaBitmask* bitmask, const size_t index,
 		uint8_t value)
 {
@@ -126,9 +128,44 @@ void createPumaBitmask(struct pumaBitmask* bm, const size_t numElements,
 	value = ~(value - 1);
 	memset(bm->buckets, value, ((numElements + 63) / 64) * sizeof(uint64_t));
 	bm->numElements = numElements;
+
+	bm->mallocedBuckets = true;
+}
+
+void createPumaBitmaskForElemArray(struct pumaBitmask* bm,
+		void* array, const size_t arraySize, const uint8_t initialValue,
+		const size_t elemSize, char** arrayStart, size_t* numElements)
+{
+	size_t spacePerBucket = (64 * elemSize + sizeof(uint64_t));
+	size_t baseNumElements = arraySize / spacePerBucket;
+
+	size_t spaceLeft = arraySize - baseNumElements * spacePerBucket;
+	size_t extraElements = 0;
+	if(spaceLeft > elemSize + sizeof(uint64_t))
+		extraElements = (spaceLeft - sizeof(uint64_t)) / elemSize;
+
+	*numElements = baseNumElements + extraElements;
+
+	bm->buckets = array;
+	size_t numBuckets = ((*numElements + 63) / 64);
+	*arrayStart = (char*)bm->buckets + numBuckets * sizeof(uint64_t);
+	uint8_t value = initialValue & 1;
+	value = ~(value - 1);
+	memset(bm->buckets, value, numBuckets * sizeof(uint64_t));
+	bm->numElements = *numElements;
+
+	assert(array + arraySize - *arrayStart == *numElements);
+
+	bm->mallocedBuckets = false;
+}
+
+size_t getPumaBitmaskArraySize(const size_t numElements)
+{
+	return ((numElements + 63) / 64) * sizeof(uint64_t);
 }
 
 void destroyPumaBitmask(struct pumaBitmask* bitmask)
 {
-	free(bitmask->buckets);
+	if(bitmask->mallocedBuckets)
+		free(bitmask->buckets);
 }

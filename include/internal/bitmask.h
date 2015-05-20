@@ -9,10 +9,15 @@ struct pumaBitmask
 {
 	uint64_t* buckets;
 	size_t numElements;
+	bool mallocedBuckets;
 };
 
 void createPumaBitmask(struct pumaBitmask* bm, const size_t numElements,
 		const uint8_t initialValue);
+void createPumaBitmaskForElemArray(struct pumaBitmask* bm,
+		void* array, const size_t arraySize, const uint8_t initialValue,
+		const size_t elemSize, char** arrayStart, size_t* numElements);
+size_t getPumaBitmaskArraySize(const size_t numElements);
 void destroyPumaBitmask(struct pumaBitmask* bitmask);
 void pumaBitmaskSet(struct pumaBitmask* bitmask, const size_t index,
 		uint8_t value);
