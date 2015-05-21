@@ -27,6 +27,7 @@ void* _pumallocOnThreadList(struct pumaThreadList* threadList)
 	}
 
 	threadList->numNodes += (!tail->active);
+	threadList->tail = tail;
 	tail->active = true;
 
 	void* newElement = _getElement(tail, freeIndex);
