@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include "pumalist.h"
+#include "pumastaticvar.h"
+#include "pumathreadpool.h"
 #include "pumakernel.h"
 #include "extradata.h"
 #include "pumalloc.h"
