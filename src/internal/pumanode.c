@@ -85,10 +85,6 @@ size_t _getBiggestCacheSize()
 struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 		size_t elementSize)
 {
-#ifndef NNUMA
-	numa_set_bind_policy(1);
-#endif
-
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
 	struct pumaNode* tail = threadList->tail;
 	int nextIndex = 0;
