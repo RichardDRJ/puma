@@ -113,7 +113,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	size_t nodeSize = pumaPageSize * PUMA_NODEPAGES;
 
-	retNode = numalloc_local(nodeSize);
+	retNode = numalloc_on_node(nodeSize, threadList->numaDomain);
 	VALGRIND_MAKE_MEM_DEFINED(retNode, sizeof(struct pumaNode));
 
 	size_t elementArraySize = nodeSize - sizeof(struct pumaNode);
