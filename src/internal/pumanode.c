@@ -92,12 +92,12 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
 	struct pumaNode* tail = threadList->tail;
 	int nextIndex = 0;
+	bool reuse = true;
 
 	struct pumaNode* retNode;
 
 	if(tail != NULL)
 	{
-		printf("Reusing old tail\n");
 		nextIndex = tail->index + 1;
 
 		if(!tail->active)
@@ -116,9 +116,10 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 		}
 	}
 
+	reuse = false;
+
 	size_t nodeSize = pumaPageSize * PUMA_NODEPAGES;
 
-	printf("Not reusing old tail\n");
 	retNode = numalloc_on_node(nodeSize, threadList->numaDomain);
 	VALGRIND_MAKE_MEM_DEFINED(retNode, sizeof(struct pumaNode));
 
