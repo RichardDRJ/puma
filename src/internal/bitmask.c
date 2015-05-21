@@ -137,9 +137,9 @@ void createPumaBitmaskForElemArray(struct pumaBitmask* bm,
 		const size_t elemSize, char** arrayStart, size_t* numElements)
 {
 	size_t spacePerBucket = (64 * elemSize + sizeof(uint64_t));
-	size_t baseNumElements = arraySize / spacePerBucket;
+	size_t baseNumElements = 64 * arraySize / spacePerBucket;
 
-	size_t spaceLeft = arraySize - baseNumElements * spacePerBucket;
+	size_t spaceLeft = arraySize - baseNumElements * spacePerBucket / 64;
 	size_t extraElements = 0;
 	if(spaceLeft > elemSize + sizeof(uint64_t))
 		extraElements = (spaceLeft - sizeof(uint64_t)) / elemSize;
@@ -154,7 +154,7 @@ void createPumaBitmaskForElemArray(struct pumaBitmask* bm,
 	memset(bm->buckets, value, numBuckets * sizeof(uint64_t));
 	bm->numElements = *numElements;
 
-	assert(array + arraySize - *arrayStart == *numElements);
+	assert(((char*)array + arraySize - *arrayStart) / elemSize == *numElements);
 
 	bm->mallocedBuckets = false;
 }

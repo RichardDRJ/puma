@@ -20,6 +20,8 @@ void* numalloc_local(size_t psize)
 	ret = numa_alloc_local(psize);
 #endif
 
+	assert(ret == (struct pumaNode*)((size_t)ret & ~((pumaPageSize * PUMA_NODEPAGES) - 1)));
+
 	return ret;
 }
 
