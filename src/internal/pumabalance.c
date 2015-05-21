@@ -25,8 +25,24 @@ static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int d
 	while(!done)
 	{
 		done = (start == end);
+		struct pumaThreadList* tl = start->threadList;
 
-		size_t numPages = end->numPages;
+		{
+#if !defined(NDEBUG) && !defined(NNUMA)
+		size_t numPages = start->numPages;
+		int nodes[numPages];
+
+		size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
+
+		for(size_t p = 0; p < numPages; ++p)
+			get_mempolicy(&nodes[p], NULL, 0, (void*)start + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+
+		for(size_t p = 0; p < numPages; ++p)
+			assert(nodes[p] == tl->numaDomain);
+#endif
+		}
+
+		size_t numPages = start->numPages;
 		int nodes[numPages];
 
 		for(size_t p = 0; p < numPages; ++p)
@@ -40,6 +56,21 @@ static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int d
 			pages[p] = pages[0] + p * pumaPageSize;
 
 		numa_move_pages(0, numPages, pages, nodes, NULL, MPOL_MF_MOVE);
+
+		{
+#if !defined(NDEBUG) && !defined(NNUMA)
+		size_t numPages = start->numPages;
+		int nodes[numPages];
+
+		size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
+
+		for(size_t p = 0; p < numPages; ++p)
+			get_mempolicy(&nodes[p], NULL, 0, (void*)start + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+
+		for(size_t p = 0; p < numPages; ++p)
+			assert(nodes[p] == tl->numaDomain);
+#endif
+		}
 
 		start = start->next;
 	}
