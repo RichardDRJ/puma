@@ -85,10 +85,6 @@ size_t _getBiggestCacheSize()
 struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 		size_t elementSize)
 {
-#ifndef NNUMA
-	numa_set_bind_policy(1);
-#endif
-
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
 	struct pumaNode* tail = threadList->tail;
 	int nextIndex = 0;
@@ -174,7 +170,7 @@ done:
 	{
 		*((char*)retNode + p * pumaPageSize) = 1;
 		int status = get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
-		assert(status != 0);
+		assert(status == 0);
 	}
 
 	for(size_t p = 0; p < numPages; ++p)

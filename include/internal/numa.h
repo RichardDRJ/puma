@@ -7,7 +7,6 @@
 #endif
 
 #include <stdlib.h>
-void* numalloc_local(size_t psize);
 void* numalloc_on_node(size_t psize, int domain);
 void nufree(void* ptr, size_t size);
 
