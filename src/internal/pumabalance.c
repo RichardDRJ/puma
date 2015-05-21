@@ -20,27 +20,14 @@ struct _pumaDomainBal
 static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int domain)
 {
 #ifndef NNUMA
+	numa_set_strict(1);
+
 	bool done = false;
 
 	while(!done)
 	{
 		done = (start == end);
 		struct pumaThreadList* tl = start->threadList;
-
-		{
-#if !defined(NDEBUG) && !defined(NNUMA)
-		size_t numPages = start->numPages;
-		int nodes[numPages];
-
-		size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
-
-		for(size_t p = 0; p < numPages; ++p)
-			get_mempolicy(&nodes[p], NULL, 0, (void*)start + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
-
-		for(size_t p = 0; p < numPages; ++p)
-			assert(nodes[p] == tl->numaDomain);
-#endif
-		}
 
 		size_t numPages = start->numPages;
 		int nodes[numPages];
@@ -56,21 +43,6 @@ static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int d
 			pages[p] = pages[0] + p * pumaPageSize;
 
 		numa_move_pages(0, numPages, pages, nodes, NULL, MPOL_MF_MOVE);
-
-		{
-#if !defined(NDEBUG) && !defined(NNUMA)
-		size_t numPages = start->numPages;
-		int nodes[numPages];
-
-		size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
-
-		for(size_t p = 0; p < numPages; ++p)
-			get_mempolicy(&nodes[p], NULL, 0, (void*)start + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
-
-		for(size_t p = 0; p < numPages; ++p)
-			assert(nodes[p] == tl->numaDomain);
-#endif
-		}
 
 		start = start->next;
 	}
@@ -229,7 +201,7 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	{
 		struct pumaThreadList* tl = list->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-		tl->relativeSpeed = 1;//((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
+		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
