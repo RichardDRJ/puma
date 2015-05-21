@@ -26,25 +26,13 @@ void* numalloc_on_node(size_t psize, int domain)
 	size_t bucket = domain / sizeof(unsigned long);
 	size_t i = domain % sizeof(unsigned long);
 
-	nodemask[bucket] = (unsigned long)1 << ((sizeof(unsigned long) * 8) - (i + 1));
+	nodemask[bucket] = (unsigned long)1 << i;
 
-	size_t numPages = psize / pumaPageSize;
 
-	/*	Fault the pages in. */
-	for(size_t p = 0; p < numPages; ++p)
-		*(char*)(ret + p * pumaPageSize) = 0;
-
-	mbind(ret, psize, MPOL_BIND, nodemask, maxnode + 1,
+	status = mbind(ret, psize, MPOL_BIND, nodemask, maxnode + 2,
 			MPOL_MF_STRICT | MPOL_MF_MOVE);
 
-	int nodes[numPages];
-
-	for(size_t p = 0; p < numPages; ++p)
-		get_mempolicy(&nodes[p], NULL, 0, (void*)ret + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
-
-	for(size_t p = 0; p < numPages; ++p)
-		assert(nodes[p] == domain || (printf("page 0x%x is on domain %d when we want it on %d!", (void*)ret + p * pumaPageSize, nodes[p], domain), false));
-
+	assert(status == 0 || (printf("mbind failed: %d\n", errno), false));
 #endif // NNUMA
 	
 
