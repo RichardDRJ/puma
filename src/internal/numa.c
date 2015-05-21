@@ -9,31 +9,36 @@
 
 #include <errno.h>
 
-static void bind_to_domain(void* ptr, size_t size, int domain)
-{
-#if !defined(NNUMA)
-	numa_tonode_memory(ptr, size, domain);
-#endif
-
-	(void)ptr;(void)size;(void)domain;
-}
-
 void* numalloc_on_node(size_t psize, int domain)
 {
 	void* ret;
-#if PUMA_NODEPAGES > 1 || defined(NNUMA)
+
 	int status = posix_memalign(&ret, psize, psize);
+	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 
 #ifndef NNUMA
-	bind_to_domain(ret, psize, domain);
+	int maxnode = numa_max_node();
+	size_t numBuckets = (1 + maxnode / sizeof(unsigned long));
+	unsigned long nodemask[numBuckets];
+
+	memset(nodemask, 0, numBuckets * sizeof(unsigned long));
+
+	size_t bucket = domain / sizeof(unsigned long);
+	size_t i = domain % sizeof(unsigned long);
+
+	nodemask[bucket] = (unsigned long)1 << ((sizeof(unsigned long) * 8) - (i + 1));
+
+	size_t numPages = psize / pumaPageSize;
+
+	/*	Fault the pages in. */
+	for(size_t p = 0; p < numPages; ++p)
+		*1(char*)(ret + p * pumaPageSize) = 0;
+
+	mbind(ret, psize, MPOL_BIND, nodemask, maxnode + 1,
+			MPOL_MF_STRICT | MPOL_MF_MOVE);
+
 #endif // NNUMA
 	
-	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
-#else
-	numa_set_bind_policy(1);
-	numa_set_strict(1);
-	ret = numa_alloc_onnode(psize, domain);
-#endif
 
 	assert(ret == (struct pumaNode*)((size_t)ret & ~((pumaPageSize * PUMA_NODEPAGES) - 1)));
 
@@ -42,9 +47,5 @@ void* numalloc_on_node(size_t psize, int domain)
 
 void nufree(void* ptr, size_t size)
 {
-#if PUMA_NODEPAGES > 1 || defined(NNUMA)
 	free(ptr);
-#else
-	numa_free(ptr, size);
-#endif
 }
