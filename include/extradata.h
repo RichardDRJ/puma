@@ -18,6 +18,15 @@ struct pumaListExtraKernelData
 	void* retValue;
 };
 
+void initKernelData(struct pumaListExtraKernelData* kernelData,
+		void* (*extraDataConstructor)(void* constructorData),
+		void* constructorData,
+		void (*extraDataDestructor)(void* data),
+		void (*extraDataThreadReduce)(void* data),
+		void (*extraDataReduce)(void* retValue, void* data[],
+				unsigned int nThreads),
+		void* retValue);
+
 extern struct pumaListExtraKernelData emptyKernelData;
 
 #ifdef __cplusplus

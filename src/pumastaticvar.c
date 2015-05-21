@@ -50,19 +50,22 @@ static bool _tailHasSpace(size_t size)
 
 static void _initialiseStaticNodes(void)
 {
-	struct pumaStaticNode* newHead = _appendStaticNode(NULL);
-
 	pthread_key_create(&_staticHeadKey, NULL);
 	pthread_key_create(&_staticTailKey, NULL);
-
-	pthread_setspecific(_staticHeadKey, newHead);
-	pthread_setspecific(_staticTailKey, newHead);
 }
 
 void* pumallocStaticLocal(size_t size)
 {
 	void* ret;
 	(void)pthread_once(&_initialiseOnce, &_initialiseStaticNodes);
+
+	if(pthread_getspecific(_staticHeadKey) == NULL)
+	{
+		struct pumaStaticNode* newHead = _appendStaticNode(NULL);
+
+		pthread_setspecific(_staticHeadKey, newHead);
+		pthread_setspecific(_staticTailKey, newHead);
+	}
 
 	struct pumaStaticNode* tail = pthread_getspecific(_staticTailKey);
 

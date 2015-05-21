@@ -25,7 +25,6 @@ static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int d
 	while(!done)
 	{
 		done = (start == end);
-		struct pumaThreadList* tl = start->threadList;
 
 		size_t numPages = start->numPages;
 		int nodes[numPages];
