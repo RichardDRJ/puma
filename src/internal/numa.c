@@ -32,7 +32,7 @@ void* numalloc_on_node(size_t psize, int domain)
 
 	/*	Fault the pages in. */
 	for(size_t p = 0; p < numPages; ++p)
-		*1(char*)(ret + p * pumaPageSize) = 0;
+		*(char*)(ret + p * pumaPageSize) = 0;
 
 	mbind(ret, psize, MPOL_BIND, nodemask, maxnode + 1,
 			MPOL_MF_STRICT | MPOL_MF_MOVE);
