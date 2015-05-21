@@ -39,7 +39,7 @@ static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int d
 		for(size_t p = 1; p < numPages; ++p)
 			pages[p] = pages[0] + p * pumaPageSize;
 
-		numa_move_pages(0, numPages, pages, nodes, NULL, 0);
+		numa_move_pages(0, numPages, pages, nodes, NULL, MPOL_MF_MOVE);
 
 		start = start->next;
 	}
