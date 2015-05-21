@@ -1,4 +1,5 @@
 #include "internal/numa.h"
+#include "internal/pumadomain.h"
 #include "internal/pumanode.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -13,22 +14,10 @@ static void* bind_to_domain(void* ptr, size_t size, int domain)
 #if !defined(NNUMA)
 	int maxnode = numa_max_node();
 
-	if(maxnode > 0)
-	{
-		size_t numBuckets = (1 + maxnode / sizeof(unsigned long));
-		unsigned long nodemask[numBuckets];
-		memset(nodemask, 0, numBuckets * sizeof(unsigned long));
-
-		size_t bucket = domain / sizeof(unsigned long);
-		size_t i = domain % sizeof(unsigned long);
-
-		nodemask[bucket] = (unsigned long)1 << ((sizeof(unsigned long) * 8) - (i + 1));
-
-		long status = mbind(ptr, size, MPOL_BIND, nodemask, maxnode,
-				MPOL_MF_STRICT | MPOL_MF_MOVE);
-
-		assert(status == 0 || (printf("errno: %d\n", errno), false)); (void)status;
-	}
+	struct bitmask* nodemask = numa_bitmask_alloc(maxnode + 1);
+	numa_bitmask_setbit(nodemask, domain);
+	numa_bind(nodemask);
+	numa_bitmask_free(nodemask);
 #endif
 
 	(void)ptr;(void)size;(void)domain;
@@ -41,7 +30,6 @@ void* numalloc_local(size_t psize)
 	int status = posix_memalign(&ret, psize, psize);
 
 #ifndef NNUMA
-	// numa_setlocal_memory(ret, psize);
 	int domain = _getCurrentNumaDomain();
 	bind_to_domain(ret, psize, domain);
 #endif // NNUMA
