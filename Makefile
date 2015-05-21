@@ -4,7 +4,7 @@ SRCDIR		:= src
 MODULES		:= $(subst src/,,$(shell find $(SRCDIR)/* -type d))
 BINDIR		:= bin
 BUILDDIR	:= build
-INCDIRS		:= include /apps/valgrind/3.5.0/include/
+INCDIRS		:= include
 
 BUILDMODS	:= $(addprefix $(BUILDDIR)/,$(MODULES))
 BINMODS		:= $(addprefix $(BINDIR)/,$(MODULES))

@@ -160,18 +160,22 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	{
 #if !defined(NDEBUG) && !defined(NNUMA)
-        size_t numPages = retNode->numPages;
-        int nodes[numPages];
+	size_t numPages = retNode->numPages;
+	int nodes[numPages];
 
-        size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
+	size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
 
-        for(size_t p = 0; p < numPages; ++p)
-                get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+	for(size_t p = 0; p < numPages; ++p)
+	{
+		void* currPage = (void*)retNode + p * pumaPageSize;
+		long status = move_pages(0, 1, &currPage, NULL, &nodes[p], 0);
+		assert(status == 0);
+	}
 
-        for(size_t p = 0; p < numPages; ++p)
-                assert(nodes[p] == threadList->numaDomain);
+	for(size_t p = 0; p < numPages; ++p)
+		assert(nodes[p] == threadList->numaDomain);
 #endif
-        }
+	}
 
 	VALGRIND_MAKE_MEM_NOACCESS(retNode->elementArray, elementArraySize);
 
@@ -187,8 +191,8 @@ done:
 
 	for(size_t p = 0; p < numPages; ++p)
 	{
-		*((char*)retNode + p * pumaPageSize) = 1;
-		int status = get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+		void* currPage = (void*)retNode + p * pumaPageSize;
+		long status = move_pages(0, 1, &currPage, NULL, &nodes[p], 0);
 		assert(status == 0);
 	}
 
