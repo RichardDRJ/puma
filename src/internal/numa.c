@@ -37,6 +37,14 @@ void* numalloc_on_node(size_t psize, int domain)
 	mbind(ret, psize, MPOL_BIND, nodemask, maxnode + 1,
 			MPOL_MF_STRICT | MPOL_MF_MOVE);
 
+	int nodes[numPages];
+
+	for(size_t p = 0; p < numPages; ++p)
+		get_mempolicy(&nodes[p], NULL, 0, (void*)ret + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+
+	for(size_t p = 0; p < numPages; ++p)
+		assert(nodes[p] == domain || (printf("page 0x%x is on domain %d when we want it on %d!", (void*)ret + p * pumaPageSize, nodes[p], domain), false));
+
 #endif // NNUMA
 	
 
