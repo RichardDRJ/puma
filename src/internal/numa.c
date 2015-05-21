@@ -9,7 +9,7 @@
 
 #include <errno.h>
 
-static void* bind_to_domain(void* ptr, size_t size, int domain)
+static void bind_to_domain(void* ptr, size_t size, int domain)
 {
 #if !defined(NNUMA)
 	numa_tonode_memory(ptr, size, domain);

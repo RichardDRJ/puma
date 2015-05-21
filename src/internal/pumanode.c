@@ -97,7 +97,6 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	if(tail != NULL)
 	{
-		printf("Reusing old tail\n");
 		nextIndex = tail->index + 1;
 
 		if(!tail->active)
@@ -174,7 +173,8 @@ done:
 	for(size_t p = 0; p < numPages; ++p)
 	{
 		*((char*)retNode + p * pumaPageSize) = 1;
-		get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+		int status = get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+		assert(status != 0);
 	}
 
 	for(size_t p = 0; p < numPages; ++p)
