@@ -38,25 +38,14 @@ static void _runKernelThread(struct pumaList* list, pumaKernel kernel,
 	struct pumaNode* currentNode = tl->head;
 	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 
+	assert(tl->numaDomain == _getCurrentNumaDomain());
+
 	PROFILING_DECLS(runKernel);
 	PROFILE(runKernel,
 	while(currentNode != NULL && currentNode->active)
 	{
 		if(currentNode->dirty)
 			_cleanupNode(currentNode, tl);
-
-#if !defined(NDEBUG) && !defined(NNUMA)
-		size_t numPages = currentNode->numPages;
-		int nodes[numPages];
-
-		size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
-
-		for(size_t p = 0; p < numPages; ++p)
-			get_mempolicy(&nodes[p], NULL, 0, (void*)currentNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
-
-		for(size_t p = 0; p < numPages; ++p)
-			assert(nodes[p] == tl->numaDomain);
-#endif
 
 		_runKernelOnNode(currentNode, kernel, extraData);
 

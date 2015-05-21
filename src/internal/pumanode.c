@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 size_t pumaPageSize = 0;
 
@@ -157,23 +158,32 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	retNode->threadList = threadList;
 
-
 	{
 #if !defined(NDEBUG) && !defined(NNUMA)
+	assert((size_t)retNode % pumaPageSize == 0);
 	size_t numPages = retNode->numPages;
-	int nodes[numPages];
+
+	for(size_t p = 1; p < numPages; ++p)
+	{
+		char* currPage = ((char*)retNode) + p * pumaPageSize;
+		*currPage = 1;
+	}
+
+	int nodes_status[numPages];
+	memset(nodes_status, 0, sizeof(int) * numPages);
 
 	size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
 
 	for(size_t p = 0; p < numPages; ++p)
 	{
-		void* currPage = (void*)retNode + p * pumaPageSize;
-		long status = move_pages(0, 1, &currPage, NULL, &nodes[p], 0);
+		void* currPage = ((char*)retNode) + p * pumaPageSize;
+		nodes_status[p] = -1;
+		long status = move_pages(0, 1, &currPage, NULL, &nodes_status[p], 0);
 		assert(status == 0);
 	}
 
 	for(size_t p = 0; p < numPages; ++p)
-		assert(nodes[p] == threadList->numaDomain);
+			assert(nodes_status[p] == threadList->numaDomain);
 #endif
 	}
 
@@ -184,20 +194,30 @@ done:
 
 	{
 #if !defined(NDEBUG) && !defined(NNUMA)
+	assert((size_t)retNode % pumaPageSize == 0);
 	size_t numPages = retNode->numPages;
-	int nodes[numPages];
+
+	for(size_t p = 1; p < numPages; ++p)
+	{
+		char* currPage = ((char*)retNode) + p * pumaPageSize;
+		*currPage = 1;
+	}
+
+	int nodes_status[numPages];
+	memset(nodes_status, 0, sizeof(int) * numPages);
 
 	size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
 
 	for(size_t p = 0; p < numPages; ++p)
 	{
-		void* currPage = (void*)retNode + p * pumaPageSize;
-		long status = move_pages(0, 1, &currPage, NULL, &nodes[p], 0);
+		void* currPage = ((char*)retNode) + p * pumaPageSize;
+		nodes_status[p] = -1;
+		long status = move_pages(0, 1, &currPage, NULL, &nodes_status[p], 0);
 		assert(status == 0);
 	}
 
 	for(size_t p = 0; p < numPages; ++p)
-		assert(nodes[p] == threadList->numaDomain);
+			assert(nodes_status[p] == threadList->numaDomain);
 #endif
 	}
 
