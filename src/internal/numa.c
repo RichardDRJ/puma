@@ -8,6 +8,32 @@
 
 #include <errno.h>
 
+static void* bind_to_domain(void* ptr, size_t size, int domain)
+{
+#if !defined(NNUMA)
+	int maxnode = numa_max_node();
+
+	if(maxnode > 0)
+	{
+		size_t numBuckets = (1 + maxnode / sizeof(unsigned long));
+		unsigned long nodemask[numBuckets];
+		memset(nodemask, 0, numBuckets * sizeof(unsigned long));
+
+		size_t bucket = domain / sizeof(unsigned long);
+		size_t i = domain % sizeof(unsigned long);
+
+		nodemask[bucket] = (unsigned long)1 << ((sizeof(unsigned long) * 8) - (i + 1));
+
+		long status = mbind(ptr, size, MPOL_BIND, nodemask, maxnode,
+				MPOL_MF_STRICT | MPOL_MF_MOVE);
+
+		assert(status == 0 || (printf("errno: %d\n", errno), false)); (void)status;
+	}
+#endif
+
+	(void)ptr;(void)size;(void)domain;
+}
+
 void* numalloc_local(size_t psize)
 {
 	void* ret;
@@ -15,7 +41,9 @@ void* numalloc_local(size_t psize)
 	int status = posix_memalign(&ret, psize, psize);
 
 #ifndef NNUMA
-	numa_setlocal_memory(ret, psize);
+	// numa_setlocal_memory(ret, psize);
+	int domain = _getCurrentNumaDomain();
+	bind_to_domain(ret, psize, domain);
 #endif // NNUMA
 	
 	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
@@ -35,7 +63,7 @@ void* numalloc_on_node(size_t psize, int domain)
 	int status = posix_memalign(&ret, psize, psize);
 
 #ifndef NNUMA
-	numa_tonode_memory(ret, psize, domain);
+	bind_to_domain(ret, psize, domain);
 #endif // NNUMA
 	
 	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
@@ -55,23 +83,4 @@ void nufree(void* ptr, size_t size)
 #else
 	numa_free(ptr, size);
 #endif
-}
-
-void numa_bind_to_node(size_t currDomain)
-{
-#if !defined(NNUMA) && 0
-	int maxNode = numa_max_node();
-
-	size_t numBuckets = (1 + maxNode / sizeof(uint64_t));
-	uint64_t nodemask[numBuckets];
-	memset(nodemask, 0, numBuckets * sizeof(uint64_t));
-
-	size_t bucket = currDomain / sizeof(uint64_t);
-	size_t i = currDomain % sizeof(uint64_t);
-
-	nodemask[bucket] = (uint64_t)1 << ((sizeof(uint64_t) * 8) - (i + 1));
-
-	long status = set_mempolicy(MPOL_BIND, nodemask, maxNode);
-	assert(status == 0 || (printf("errno: %d\n", errno), false)); (void)status;
-#endif // NNUMA
 }

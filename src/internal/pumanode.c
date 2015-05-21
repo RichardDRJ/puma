@@ -159,8 +159,6 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 done:
 	threadList->numNodes = retNode->index + 1;
 
-	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-
 	{
 #if !defined(NDEBUG) && !defined(NNUMA)
 	size_t numPages = retNode->numPages;
@@ -175,6 +173,8 @@ done:
 		assert(nodes[p] == threadList->numaDomain);
 #endif
 	}
+
+	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
 
 	return retNode;
 }

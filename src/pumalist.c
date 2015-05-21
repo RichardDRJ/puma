@@ -24,8 +24,6 @@ static void _setupThreadListsWorker(void* arg)
 {
 	struct pumaList* list = (struct pumaList*)arg;
 	int currDomain = _getCurrentNumaDomain();
-	numa_bind_to_node(currDomain);
-
 	struct pumaDomain* domain = &list->domains[currDomain];
 	size_t cpuIndex = _getCurrentCPUIndexInDomain();
 	struct pumaThreadList* tl = &domain->listsInDomain[cpuIndex];
