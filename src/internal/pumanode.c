@@ -86,7 +86,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 		size_t elementSize)
 {
 #ifndef NNUMA
-	numa_set_strict(1);
+	numa_set_bind_policy(1);
 #endif
 
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));

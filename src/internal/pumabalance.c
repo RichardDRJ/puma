@@ -20,7 +20,7 @@ struct _pumaDomainBal
 static void _moveNodeDomains(struct pumaNode* start, struct pumaNode* end, int domain)
 {
 #ifndef NNUMA
-	numa_set_strict(1);
+	numa_set_bind_policy(1);
 
 	bool done = false;
 
