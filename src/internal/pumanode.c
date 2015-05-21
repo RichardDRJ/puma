@@ -117,7 +117,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	size_t nodeSize = pumaPageSize * PUMA_NODEPAGES;
 
-	retNode = numalloc_on_node(nodeSize, threadList->numaDomain);
+	retNode = numalloc_aligned_on_node(nodeSize, threadList->numaDomain);
 	VALGRIND_MAKE_MEM_DEFINED(retNode, sizeof(struct pumaNode));
 
 	size_t elementArraySize = nodeSize - sizeof(struct pumaNode);
@@ -245,5 +245,5 @@ void _freePumaNode(struct pumaNode* node)
 	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
 
 	destroyPumaBitmask(&node->freeMask);
-	nufree(node, node->blockSize);
+	nufree_aligned(node, node->blockSize);
 }

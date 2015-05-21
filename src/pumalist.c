@@ -175,7 +175,7 @@ static void _destroyThreadListWorker(void* arg)
 		destroyPumaBitmask(&currentNode->freeMask);
 
 		struct pumaNode* nextNode = currentNode->next;
-		nufree(currentNode, currentNode->blockSize);
+		nufree_aligned(currentNode, currentNode->blockSize);
 		currentNode = nextNode;
 	}
 }

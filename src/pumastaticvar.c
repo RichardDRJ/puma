@@ -5,10 +5,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#ifndef PUMA_STATICPAGES
-#define PUMA_STATICPAGES 1
-#endif
-
 extern size_t pumaPageSize;
 
 struct pumaStaticNode
@@ -26,9 +22,9 @@ static pthread_key_t _staticHeadKey;
 static pthread_key_t _staticTailKey;
 static pthread_once_t _initialiseOnce = PTHREAD_ONCE_INIT;
 
-static struct pumaStaticNode* _appendStaticNode(struct pumaStaticNode* prev)
+static struct pumaStaticNode* _appendStaticNode(struct pumaStaticNode* prev,
+		const size_t nodeSize)
 {
-	size_t nodeSize = PUMA_STATICPAGES * pumaPageSize;
 	int domain = _getCurrentNumaDomain();
 	struct pumaStaticNode* ret = numalloc_on_node(nodeSize, domain);
 	ret->nextFree = (void*)ret + sizeof(struct pumaStaticNode);
@@ -42,7 +38,7 @@ static struct pumaStaticNode* _appendStaticNode(struct pumaStaticNode* prev)
 	return ret;
 }
 
-static bool _tailHasSpace(size_t size)
+static inline bool _tailHasSpace(const size_t size)
 {
 	struct pumaStaticNode* tail = pthread_getspecific(_staticTailKey);
 	return tail->blockSize - tail->used >= size;
@@ -54,14 +50,20 @@ static void _initialiseStaticNodes(void)
 	pthread_key_create(&_staticTailKey, NULL);
 }
 
-void* pumallocStaticLocal(size_t size)
+static inline size_t _getSmallestContainingNode(const size_t size)
+{
+	return (size & ~(pumaPageSize - 1)) + pumaPageSize;
+}
+
+void* pumallocStaticLocal(const size_t size)
 {
 	void* ret;
 	(void)pthread_once(&_initialiseOnce, &_initialiseStaticNodes);
 
 	if(pthread_getspecific(_staticHeadKey) == NULL)
 	{
-		struct pumaStaticNode* newHead = _appendStaticNode(NULL);
+		struct pumaStaticNode* newHead = _appendStaticNode(NULL,
+				_getSmallestContainingNode(size));
 
 		pthread_setspecific(_staticHeadKey, newHead);
 		pthread_setspecific(_staticTailKey, newHead);
@@ -70,7 +72,7 @@ void* pumallocStaticLocal(size_t size)
 	struct pumaStaticNode* tail = pthread_getspecific(_staticTailKey);
 
 	if(!_tailHasSpace(size))
-		tail = _appendStaticNode(tail);
+		tail = _appendStaticNode(tail, _getSmallestContainingNode(size));
 
 	ret = tail->nextFree;
 	tail->nextFree += size;
