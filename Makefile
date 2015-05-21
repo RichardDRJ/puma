@@ -4,7 +4,7 @@ SRCDIR		:= src
 MODULES		:= $(subst src/,,$(shell find $(SRCDIR)/* -type d))
 BINDIR		:= bin
 BUILDDIR	:= build
-INCDIRS		:= include
+INCDIRS		:= include /apps/valgrind/3.5.0/include/
 
 BUILDMODS	:= $(addprefix $(BUILDDIR)/,$(MODULES))
 BINMODS		:= $(addprefix $(BINDIR)/,$(MODULES))
@@ -22,8 +22,8 @@ OBJECTS		:= $(COBJECTS) $(CXXOBJECTS)
 
 INCFLAGS	= $(addprefix -I,$(INCDIRS))
 
-CFLAGS		= -std=gnu99 -Wunused-variable -O2 -g -DNDEBUG -fPIC
-CXXFLAGS	= -std=c++11 -Wunused-variable -O2 -g -DNDEBUG -fPIC
+CFLAGS		= -std=gnu99 -Wunused-variable -O0 -g -fPIC
+CXXFLAGS	= -std=c++11 -Wunused-variable -O0 -g -fPIC
 
 LDFLAGS		= -shared -pthread
 

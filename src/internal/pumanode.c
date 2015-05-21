@@ -118,6 +118,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	size_t nodeSize = pumaPageSize * PUMA_NODEPAGES;
 
+	printf("Not reusing old tail\n");
 	retNode = numalloc_on_node(nodeSize, threadList->numaDomain);
 	VALGRIND_MAKE_MEM_DEFINED(retNode, sizeof(struct pumaNode));
 
@@ -159,6 +160,22 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	retNode->threadList = threadList;
 
+
+	{
+#if !defined(NDEBUG) && !defined(NNUMA)
+        size_t numPages = retNode->numPages;
+        int nodes[numPages];
+
+        size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
+
+        for(size_t p = 0; p < numPages; ++p)
+                get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+
+        for(size_t p = 0; p < numPages; ++p)
+                assert(nodes[p] == threadList->numaDomain);
+#endif
+        }
+
 	VALGRIND_MAKE_MEM_NOACCESS(retNode->elementArray, elementArraySize);
 
 done:
@@ -174,7 +191,8 @@ done:
 	for(size_t p = 0; p < numPages; ++p)
 	{
 		*((char*)retNode + p * pumaPageSize) = 1;
-		get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+		int status = get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+		assert(status == 0);
 	}
 
 	for(size_t p = 0; p < numPages; ++p)
