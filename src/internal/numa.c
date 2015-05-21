@@ -31,6 +31,7 @@ void* numalloc_on_node(size_t psize, int domain)
 	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 #else
 	numa_set_bind_policy(1);
+	numa_set_strict(1);
 	ret = numa_alloc_onnode(psize, domain);
 #endif
 
