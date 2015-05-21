@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 size_t pumaPageSize = 0;
 
@@ -159,6 +160,21 @@ done:
 	threadList->numNodes = retNode->index + 1;
 
 	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
+
+	{
+#if !defined(NDEBUG) && !defined(NNUMA)
+	size_t numPages = retNode->numPages;
+	int nodes[numPages];
+
+	size_t pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
+
+	for(size_t p = 0; p < numPages; ++p)
+		get_mempolicy(&nodes[p], NULL, 0, (void*)retNode + p * pumaPageSize, MPOL_F_NODE | MPOL_F_ADDR);
+
+	for(size_t p = 0; p < numPages; ++p)
+		assert(nodes[p] == threadList->numaDomain);
+#endif
+	}
 
 	return retNode;
 }

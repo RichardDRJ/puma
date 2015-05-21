@@ -40,7 +40,8 @@ char* test_getIndexOfElementAndGetElementAreEquivalent(void)
 	pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
 
 	for(size_t elementSize = 10;
-			elementSize < pumaPageSize * PUMA_NODEPAGES - sizeof(struct pumaNode);
+			elementSize < pumaPageSize * PUMA_NODEPAGES -
+					sizeof(struct pumaNode) - sizeof(uint64_t);
 			++elementSize)
 	{
 		struct pumaThreadList list;

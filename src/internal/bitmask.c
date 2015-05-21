@@ -137,7 +137,7 @@ void createPumaBitmaskForElemArray(struct pumaBitmask* bm,
 		const size_t elemSize, char** arrayStart, size_t* numElements)
 {
 	size_t spacePerBucket = (64 * elemSize + sizeof(uint64_t));
-	size_t baseNumElements = 64 * arraySize / spacePerBucket;
+	size_t baseNumElements = 64 * (arraySize / spacePerBucket);
 
 	size_t spaceLeft = arraySize - baseNumElements * spacePerBucket / 64;
 	size_t extraElements = 0;
