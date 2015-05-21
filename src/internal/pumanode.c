@@ -97,6 +97,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 
 	if(tail != NULL)
 	{
+		printf("Reusing old tail\n");
 		nextIndex = tail->index + 1;
 
 		if(!tail->active)
