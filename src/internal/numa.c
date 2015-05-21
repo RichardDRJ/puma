@@ -9,30 +9,32 @@
 
 #include <errno.h>
 
-static void* bind_to_domain(void* ptr, size_t size, int domain)
+static void* bind_to_domain(int domain)
 {
 #if !defined(NNUMA)
 	int maxnode = numa_max_node();
 
 	struct bitmask* nodemask = numa_bitmask_alloc(maxnode + 1);
 	numa_bitmask_setbit(nodemask, domain);
-	numa_bind(nodemask);
+
+	numa_set_membind(nodemask);
+
 	numa_bitmask_free(nodemask);
 #endif
 
-	(void)ptr;(void)size;(void)domain;
+	(void)domain;
 }
 
 void* numalloc_local(size_t psize)
 {
 	void* ret;
 #if PUMA_NODEPAGES > 1 || defined(NNUMA)
-	int status = posix_memalign(&ret, psize, psize);
-
 #ifndef NNUMA
 	int domain = _getCurrentNumaDomain();
-	bind_to_domain(ret, psize, domain);
+	bind_to_domain(domain);
 #endif // NNUMA
+
+	int status = posix_memalign(&ret, psize, psize);
 	
 	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 #else
@@ -48,11 +50,11 @@ void* numalloc_on_node(size_t psize, int domain)
 {
 	void* ret;
 #if PUMA_NODEPAGES > 1 || defined(NNUMA)
-	int status = posix_memalign(&ret, psize, psize);
-
 #ifndef NNUMA
-	bind_to_domain(ret, psize, domain);
+	bind_to_domain(domain);
 #endif // NNUMA
+
+	int status = posix_memalign(&ret, psize, psize);
 	
 	assert(status == 0 || (printf("status = %d\n", status), false)); (void)status;
 #else
