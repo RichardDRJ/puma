@@ -86,89 +86,6 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 	return newList;
 }
 
-struct _getNumElementsArg
-{
-	struct pumaList* list;
-	size_t* sums;
-};
-
-static void _getNumNodesWorker(void* arg)
-{
-	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
-	struct pumaList* list = vars->list;
-	size_t thread = pumaGetThreadNum();
-
-	int currDomain = _getCurrentNumaDomain();
-	struct pumaDomain* domain = list->domains + currDomain;
-	struct pumaThreadList* listsInDomain = domain->listsInDomain;
-	size_t numListsInDomain = domain->numListsInDomain;
-	VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
-			numListsInDomain * sizeof(struct pumaThreadList));
-
-	struct pumaThreadList* threadList =
-			listsInDomain + _getCurrentCPUIndexInDomain();
-
-	VALGRIND_MAKE_MEM_NOACCESS(listsInDomain,
-			numListsInDomain * sizeof(struct pumaThreadList));
-
-	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-	vars->sums[thread] = threadList->numNodes;
-	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-}
-
-void getPerThreadNumNodes(struct pumaList* list, size_t* numNodes)
-{
-	struct _getNumElementsArg arg;
-	arg.list = list;
-	arg.sums = numNodes;
-
-	executeOnThreadPool(list->threadPool, &_getNumNodesWorker, (void*)(&arg));
-}
-
-static void _getNumElementsWorker(void* arg)
-{
-	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
-	struct pumaList* list = vars->list;
-	size_t thread = pumaGetThreadNum();
-
-	int currDomain = _getCurrentNumaDomain();
-	struct pumaDomain* domain = list->domains + currDomain;
-	struct pumaThreadList* listsInDomain = domain->listsInDomain;
-	size_t numListsInDomain = domain->numListsInDomain;
-	VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
-			numListsInDomain * sizeof(struct pumaThreadList));
-
-	struct pumaThreadList* threadList =
-			listsInDomain + _getCurrentCPUIndexInDomain();
-
-	VALGRIND_MAKE_MEM_NOACCESS(listsInDomain,
-			numListsInDomain * sizeof(struct pumaThreadList));
-
-	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
-	vars->sums[thread] += threadList->numElements;
-	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
-}
-
-size_t getNumElements(struct pumaList* list)
-{
-	size_t numThreads = pumaGetNumThreads(list->threadPool);
-	size_t sums[numThreads];
-	memset(sums, 0, numThreads * sizeof(size_t));
-
-	struct _getNumElementsArg arg;
-	arg.list = list;
-	arg.sums = sums;
-
-	executeOnThreadPool(list->threadPool, &_getNumElementsWorker, (void*)(&arg));
-
-	size_t sum = 0;
-
-	for(size_t i = 0; i < numThreads; ++i)
-		sum += sums[i];
-
-	return sum;
-}
-
 static void _destroyThreadListWorker(void* arg)
 {
 	struct pumaList* list = (struct pumaList*)arg;
@@ -193,5 +110,7 @@ void destroyPumaList(struct pumaList* list)
 	executeOnThreadPool(list->threadPool, &_destroyThreadListWorker, (void*)list);
 
 	free(list->threadLists);
+	free(list->threadListToIndex);
+	free(list->domains);
 	free(list);
 }

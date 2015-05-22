@@ -32,6 +32,7 @@ void* numalloc_on_node(size_t psize, int domain)
 			MPOL_MF_STRICT | MPOL_MF_MOVE);
 
 	assert(status == 0 || (printf("mbind failed: %d\n", errno), false));
+	(void)status;
 #endif // NNUMA
 	
 
