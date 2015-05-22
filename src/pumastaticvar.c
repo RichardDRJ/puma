@@ -94,7 +94,8 @@ void pumaDeleteStaticData(void)
 		head = next;
 	}
 
-	_initialiseOnce = PTHREAD_ONCE_INIT;
+	pthread_once_t _dummyOnce = PTHREAD_ONCE_INIT;
+	memcpy(&_initialiseOnce, &_dummyOnce, sizeof(pthread_once_t));
 	pthread_key_delete(_staticHeadKey);
 	pthread_key_delete(_staticTailKey);
 }

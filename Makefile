@@ -61,6 +61,7 @@ ifeq ($(OS),Linux)
 	LINKER		= icc
 	EXT			= so
 else ifeq ($(OS),Darwin)
+	CFLAGS		+= -DNOOPENMP
 	CFLAGS 		+= -DNNUMA -DNOVALGRIND
 	CXXFLAGS	+= -DNNUMA -DNOVALGRIND
 	CC			= gcc
