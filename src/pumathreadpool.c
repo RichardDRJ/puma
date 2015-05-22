@@ -20,6 +20,10 @@ static pthread_once_t offsetKeyOnce = PTHREAD_ONCE_INIT;
 static pthread_key_t timeOffsetKey;
 #endif // NOOPENMP
 
+static bool _setupComplete = false;
+
+static struct pumaThreadPool* threadPool;
+
 struct _threadPoolWorkerInfo
 {
 	struct pumaThreadPool* pool;
@@ -37,6 +41,8 @@ struct pumaThreadPool
 
 	pthread_barrier_t workWaitBarrier;
 	pthread_barrier_t doneBarrier;
+
+	pthread_rwlock_t workFunctionLock;
 
 	void (*workFunction)(void* arg);
 	void* arg;
@@ -141,9 +147,11 @@ void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg)
 {
 #ifdef NOOPENMP
+	pthread_rwlock_wrlock(&tp->workFunctionLock);
 	tp->workFunction = workFunction;
 	tp->arg = arg;
 	pthread_barrier_wait(&tp->workWaitBarrier);
+	pthread_rwlock_unlock(&tp->workFunctionLock);
 	pthread_barrier_wait(&tp->doneBarrier);
 
 	tp->timeSeconds = 0;
@@ -190,8 +198,10 @@ static void* _threadPoolWorker(void* arg)
 	while(true)
 	{
 		pthread_barrier_wait(&pool->workWaitBarrier);
+		pthread_rwlock_rdlock(&pool->workFunctionLock);
 		void (*workFunction)(void* arg) = pool->workFunction;
 		void* arg = pool->arg;
+		pthread_rwlock_unlock(&pool->workFunctionLock);
 
 		PROFILE(doWork, workFunction(arg);)
 
@@ -209,10 +219,20 @@ static void _make_keys(void)
 }
 #endif // NOOPENMP
 
-struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
+struct pumaThreadPool* getThreadPool(void)
 {
-	struct pumaThreadPool* threadPool =
-			(struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
+	if(!_setupComplete)
+		fprintf(stderr, "Please call setupThreadPool() before getThreadPool().");
+
+	return threadPool;
+}
+
+void setupThreadPool(size_t numThreads, char* affinityStr)
+{
+	if(_setupComplete)
+		return;
+
+	threadPool = (struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
 
 	numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
 	threadPool->numThreads = numThreads;
@@ -224,6 +244,7 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 					sizeof(struct _threadPoolWorkerInfo*));
 	pthread_barrier_init(&threadPool->workWaitBarrier, NULL, numThreads + 1);
 	pthread_barrier_init(&threadPool->doneBarrier, NULL, numThreads + 1);
+	pthread_rwlock_init(&threadPool->workFunctionLock, NULL);
 
 	(void)pthread_once(&key_once, &_make_keys);
 
@@ -288,7 +309,7 @@ struct pumaThreadPool* newThreadPool(size_t numThreads, char* affinityStr)
 	}
 #endif // NOOPENMP
 
-	return threadPool;
+	_setupComplete = true;
 }
 
 double pumaGetTimeWaitedForPool(void)
