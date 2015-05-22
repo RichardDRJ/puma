@@ -4,6 +4,7 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#include <string.h>
 
 extern size_t pumaPageSize;
 
