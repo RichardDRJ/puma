@@ -57,8 +57,12 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 	newList->threadLists = (struct pumaThreadList*)calloc(numCores, sizeof(struct pumaThreadList));
 	newList->numCores = numCores;
 	newList->numThreads = numThreads;
+#ifdef STATIC_THREADPOOL
 	setupThreadPool(numThreads, threadAffinity);
 	newList->threadPool = getThreadPool();
+#else
+	newList->threadPool = createThreadPool(numThreads, threadAffinity);
+#endif // STATIC_THREADPOOL
 	newList->threadListToIndex = calloc(numThreads, sizeof(size_t));
 
 	size_t numDomains = _getNumDomains();

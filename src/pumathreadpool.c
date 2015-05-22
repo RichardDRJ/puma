@@ -20,9 +20,10 @@ static pthread_once_t offsetKeyOnce = PTHREAD_ONCE_INIT;
 static pthread_key_t timeOffsetKey;
 #endif // NOOPENMP
 
+#ifdef STATIC_THREADPOOL
 static bool _setupComplete = false;
-
 static struct pumaThreadPool* threadPool;
+#endif
 
 struct _threadPoolWorkerInfo
 {
@@ -219,6 +220,7 @@ static void _make_keys(void)
 }
 #endif // NOOPENMP
 
+#ifdef STATIC_THREADPOOL
 struct pumaThreadPool* getThreadPool(void)
 {
 	if(!_setupComplete)
@@ -231,7 +233,11 @@ void setupThreadPool(size_t numThreads, char* affinityStr)
 {
 	if(_setupComplete)
 		return;
-
+#else
+struct pumaThreadPool* createThreadPool(size_t numThreads, char* affinityStr)
+{
+	struct pumaThreadPool* threadPool;
+#endif
 	threadPool = (struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
 
 	numThreads = (numThreads != 0) ? numThreads : sysconf(_SC_NPROCESSORS_ONLN);
@@ -309,7 +315,11 @@ void setupThreadPool(size_t numThreads, char* affinityStr)
 	}
 #endif // NOOPENMP
 
+#ifdef STATIC_THREADPOOL
 	_setupComplete = true;
+#else
+	return threadPool;
+#endif
 }
 
 double pumaGetTimeWaitedForPool(void)

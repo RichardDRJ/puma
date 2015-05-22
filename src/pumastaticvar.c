@@ -80,3 +80,21 @@ void* pumallocStaticLocal(const size_t size)
 
 	return ret;
 }
+
+void pumaDeleteStaticData(void)
+{
+	(void)pthread_once(&_initialiseOnce, &_initialiseStaticNodes);
+
+	struct pumaStaticNode* head = pthread_getspecific(_staticHeadKey);
+
+	while(head != NULL)
+	{
+		struct pumaStaticNode* next = head->next;
+		nufree(head, head->blockSize);
+		head = next;
+	}
+
+	_initialiseOnce = PTHREAD_ONCE_INIT;
+	pthread_key_delete(_staticHeadKey);
+	pthread_key_delete(_staticTailKey);
+}

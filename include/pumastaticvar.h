@@ -8,6 +8,7 @@ extern "C" {
 #include <stdlib.h>
 
 void* pumallocStaticLocal(size_t size);
+void pumaDeleteStaticData(void);
 
 #ifdef __cplusplus
 }

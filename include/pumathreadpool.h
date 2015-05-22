@@ -9,8 +9,13 @@ extern "C" {
 
 struct pumathreadpool;
 
+#ifdef STATIC_THREADPOOL
 struct pumaThreadPool* getThreadPool(void);
 void setupThreadPool(size_t numThreads, char* affinityStr);
+#else
+struct pumaThreadPool* createThreadPool(size_t numThreads, char* affinityStr);
+#endif
+
 void executeOnThreadPool(struct pumaThreadPool* tp,
 		void (*workFunction)(void* arg), void* arg);
 size_t pumaGetThreadNum(void);
