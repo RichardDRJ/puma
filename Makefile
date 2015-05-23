@@ -32,7 +32,7 @@ LDFLAGS		= -shared -pthread
 
 FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 
-DOXYGEN_CONF	:= doxygen.cfg
+DOXYGEN_CONF	:= $(DOCDIR)/doxygen.cfg
 
 ifdef PUMA_NODEPAGES
 	CFLAGS		+= -DPUMA_NODEPAGES=$(PUMA_NODEPAGES)
@@ -74,7 +74,7 @@ TARGET		:= $(BINDIR)/libpumalist.$(EXT)
 
 include tests/test.mk
 
-.PHONY: all clean no_test doc doc_clean
+.PHONY: all clean no_test doc docs_clean
 
 all: $(TARGET) doc test
 
@@ -102,8 +102,8 @@ $(BUILDDIR)/%.c.o: src/%.c | $(FOLDERS)
 $(SRCS): $(HEADERS)
 
 docs_clean:
-	@rm -rf $(DOCDIR)
+	@find docs/* -maxdepth 0 | grep -v "doxygen.cfg" | xargs rm -rf
 
-clean: test_clean doc_clean
+clean: test_clean docs_clean
 	@echo "Cleaning working tree"
 	@rm -rf $(BUILDDIR) $(BINDIR)
