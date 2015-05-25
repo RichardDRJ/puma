@@ -5,7 +5,7 @@ TEST_MODULES	:= $(subst src/,,$(shell find $(SRCDIR)/* -type d))
 TEST_BINDIR		:= $(TESTDIR)/bin
 TEST_BUILDDIR	:= $(TESTDIR)/build
 TEST_INCDIRS	:= $(TESTDIR)/include $(INCDIRS)
-TEST_TARGET		:= $(TEST_BINDIR)/test_pumalist
+TEST_TARGET		:= $(TEST_BINDIR)/test_puma
 
 TEST_BUILDMODS	:= $(addprefix $(TEST_BUILDDIR)/,$(TEST_MODULES))
 TEST_BINMODS	:= $(addprefix $(TEST_BINDIR)/,$(TEST_MODULES))
@@ -19,7 +19,7 @@ TEST_COBJECTS 	:= $(subst $(TEST_SRCDIR),$(TEST_BUILDDIR),$(TEST_CSRCS:%.c=%.c.o
 TEST_CXXOBJECTS	:= $(subst $(TEST_SRCDIR),$(TEST_BUILDDIR),$(TEST_CXXSRCS:%.cpp=%.cpp.o))
 TEST_OBJECTS	:= $(TEST_COBJECTS) $(TEST_CXXOBJECTS)
 
-TEST_LDFLAGS	:= -L$(BINDIR) -lpumalist
+TEST_LDFLAGS	:= -L$(BINDIR) -lpuma
 
 TEST_INCFLAGS	:= $(addprefix -I,$(TEST_INCDIRS))
 
