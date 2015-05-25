@@ -70,7 +70,7 @@ else ifeq ($(OS),Darwin)
 	EXT			= dylib
 endif
 
-TARGET		:= $(BINDIR)/libpumalist.$(EXT)
+TARGET		:= $(BINDIR)/libpuma.$(EXT)
 
 include tests/test.mk
 
