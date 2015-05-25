@@ -26,7 +26,7 @@ static void _emptyExtraDataPerThreadReduce(void* data)
 	(void)data;
 }
 
-struct pumaListExtraKernelData emptyKernelData = {
+struct pumaExtraKernelData emptyKernelData = {
 		&_emptyExtraDataConstructor,
 		NULL,
 		&_emptyExtraDataDestructor,
@@ -35,7 +35,7 @@ struct pumaListExtraKernelData emptyKernelData = {
 		NULL,
 };
 
-void initKernelData(struct pumaListExtraKernelData* kernelData,
+void initKernelData(struct pumaExtraKernelData* kernelData,
 		void* (*extraDataConstructor)(void* constructorData),
 		void* constructorData,
 		void (*extraDataDestructor)(void* data),

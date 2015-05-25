@@ -16,7 +16,7 @@ extern "C" {
 	@brief
 		Extra data descriptor to pass into runKernel().
 */
-struct pumaListExtraKernelData
+struct pumaExtraKernelData
 {
 	/** A per-thread constructor for extra data to pass into your kernel. */
 	void* (*extraDataConstructor)(void* constructorData);
@@ -55,7 +55,7 @@ struct pumaListExtraKernelData
 		Any or all of the arguments after kernelData may be NULL, in which case
 		they are set to point to dummy functions which do nothing.
 */
-void initKernelData(struct pumaListExtraKernelData* kernelData,
+void initKernelData(struct pumaExtraKernelData* kernelData,
 		void* (*extraDataConstructor)(void* constructorData),
 		void* constructorData,
 		void (*extraDataDestructor)(void* data),
@@ -69,7 +69,7 @@ void initKernelData(struct pumaListExtraKernelData* kernelData,
 		A dummy extradata structure which does nothing and causes NULL to be
 		passed as extra data to kernels.
 */
-extern struct pumaListExtraKernelData emptyKernelData;
+extern struct pumaExtraKernelData emptyKernelData;
 
 #ifdef __cplusplus
 }

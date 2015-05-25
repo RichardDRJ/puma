@@ -18,7 +18,7 @@ extern "C" {
 /**
 	The type signature for kernels running on pumaList.
 	\param element The current element in our runKernel iteration.
-	\param extraData Extra data created using struct pumaListExtraKernelData.
+	\param extraData Extra data created using struct pumaExtraKernelData.
 */
 typedef void (*pumaKernel)(void* element, void* extraData);
 
@@ -31,7 +31,7 @@ typedef void (*pumaKernel)(void* element, void* extraData);
 		to receive.
 */
 void runKernel(struct pumaSet* set, pumaKernel kernel,
-		struct pumaListExtraKernelData* extraDataDetails);
+		struct pumaExtraKernelData* extraDataDetails);
 
 /**
 	\brief Run an array of kernels on all elements in set in parallel.
@@ -43,7 +43,7 @@ void runKernel(struct pumaSet* set, pumaKernel kernel,
 		kernels to receive.
 */
 void runKernelList(struct pumaSet* set, pumaKernel kernels[],
-		size_t numKernels, struct pumaListExtraKernelData* extraDataDetails);
+		size_t numKernels, struct pumaExtraKernelData* extraDataDetails);
 
 /**
 	\brief Run a kernel on all elements in set which are associated with the
@@ -55,7 +55,7 @@ void runKernelList(struct pumaSet* set, pumaKernel kernels[],
 		to receive.
 */
 void runKernelCurrentThread(struct pumaSet* set, pumaKernel kernel,
-		struct pumaListExtraKernelData* extraDataDetails);
+		struct pumaExtraKernelData* extraDataDetails);
 
 #ifdef __cplusplus
 }
