@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__INTERNAL__PUMA_UTIL_H_
-#define _PUMALIST__INTERNAL__PUMA_UTIL_H_
+#ifndef _PUMA__INTERNAL__PUMA_UTIL_H_
+#define _PUMA__INTERNAL__PUMA_UTIL_H_
 
 #include "internal/pumanode.h"
 #include "internal/pumaheader.h"
@@ -15,4 +15,4 @@ size_t _getIndexOfElementOnNode(void* element, struct pumaNode* node);
 void* _getElement(struct pumaNode* node, size_t i);
 struct pumaNode* _getNodeForElement(void* element);
 
-#endif // _PUMALIST__INTERNAL__PUMA_UTIL_H_
+#endif // _PUMA__INTERNAL__PUMA_UTIL_H_

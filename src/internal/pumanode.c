@@ -125,7 +125,7 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	{
 		fprintf(stderr, "An element size of %lu is too large for nodes of size "
 				"%lu. Please specify a higher number for PUMA_NODEPAGES during "
-				"Puma compilation.", elementSize, nodeSize);
+				"PUMA compilation.", elementSize, nodeSize);
 		exit(-1);
 	}
 

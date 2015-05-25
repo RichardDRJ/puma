@@ -7,14 +7,14 @@
 		public API.
 */
 
-#ifndef _PUMALIST__PUMA_H_
-#define _PUMALIST__PUMA_H_
+#ifndef _PUMA__PUMA_H_
+#define _PUMA__PUMA_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "pumalist.h"
+#include "pumaset.h"
 #include "pumastaticvar.h"
 #include "pumathreadpool.h"
 #include "pumakernel.h"
@@ -25,4 +25,4 @@ extern "C" {
 }
 #endif
 
-#endif // _PUMALIST__PUMA_H_
+#endif // _PUMA__PUMA_H_

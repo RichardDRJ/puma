@@ -1,5 +1,5 @@
 #include "internal/numa.h"
-#include "pumalist.h"
+#include "pumaset.h"
 #include "internal/valgrind.h"
 #include "internal/pumalog.h"
 #include "internal/pumanode.h"
@@ -22,31 +22,31 @@
 
 static void _setupThreadListsWorker(void* arg)
 {
-	struct pumaList* list = (struct pumaList*)arg;
+	struct pumaSet* set = (struct pumaSet*)arg;
 	int currDomain = _getCurrentNumaDomain();
-	struct pumaDomain* domain = &list->domains[currDomain];
+	struct pumaDomain* domain = &set->domains[currDomain];
 	size_t cpuIndex = _getCurrentCPUIndexInDomain();
 	struct pumaThreadList* tl = &domain->listsInDomain[cpuIndex];
 	tl->active = true;
 	tl->numaDomain = currDomain;
 	tl->tid = pumaGetThreadNum();
-	list->threadListToIndex[tl->tid] = (size_t)(tl - list->threadLists);
-	tl->elementSize = list->elementSize;
+	set->threadListToIndex[tl->tid] = (size_t)(tl - set->threadLists);
+	tl->elementSize = set->elementSize;
 }
 
-void pumaListSetBalancer(struct pumaList* list, bool autoBalance,
+void pumaListSetBalancer(struct pumaSet* set, bool autoBalance,
 		splitterFunc splitter, void* splitterExtraData)
 {
-	list->autoBalance = autoBalance;
-	list->splitter = splitter;
-	list->splitterExtraData = splitterExtraData;
+	set->autoBalance = autoBalance;
+	set->splitter = splitter;
+	set->splitterExtraData = splitterExtraData;
 }
 
-struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
+struct pumaSet* createPumaSet(size_t elementSize, size_t numThreads,
 		char* threadAffinity)
 {
-	struct pumaList* newList =
-			(struct pumaList*)malloc(sizeof(struct pumaList));
+	struct pumaSet* newList =
+			(struct pumaSet*)malloc(sizeof(struct pumaSet));
 
 	if(pumaPageSize == 0)
 		pumaPageSize = (size_t)sysconf(_SC_PAGESIZE);
@@ -88,18 +88,18 @@ struct pumaList* createPumaList(size_t elementSize, size_t numThreads,
 
 struct _getNumElementsArg
 {
-	struct pumaList* list;
+	struct pumaSet* set;
 	size_t* sums;
 };
 
 static void _getNumElementsWorker(void* arg)
 {
 	struct _getNumElementsArg* vars = (struct _getNumElementsArg*)arg;
-	struct pumaList* list = vars->list;
+	struct pumaSet* set = vars->set;
 	size_t thread = pumaGetThreadNum();
 
 	int currDomain = _getCurrentNumaDomain();
-	struct pumaDomain* domain = list->domains + currDomain;
+	struct pumaDomain* domain = set->domains + currDomain;
 	struct pumaThreadList* listsInDomain = domain->listsInDomain;
 	size_t numListsInDomain = domain->numListsInDomain;
 	VALGRIND_MAKE_MEM_DEFINED(listsInDomain,
@@ -116,17 +116,17 @@ static void _getNumElementsWorker(void* arg)
 	VALGRIND_MAKE_MEM_NOACCESS(threadList, sizeof(struct pumaThreadList));
 }
 
-size_t getNumElements(struct pumaList* list)
+size_t getNumElements(struct pumaSet* set)
 {
-	size_t numThreads = pumaGetNumThreads(list->threadPool);
+	size_t numThreads = pumaGetNumThreads(set->threadPool);
 	size_t sums[numThreads];
 	memset(sums, 0, numThreads * sizeof(size_t));
 
 	struct _getNumElementsArg arg;
-	arg.list = list;
+	arg.set = set;
 	arg.sums = sums;
 
-	executeOnThreadPool(list->threadPool, &_getNumElementsWorker, (void*)(&arg));
+	executeOnThreadPool(set->threadPool, &_getNumElementsWorker, (void*)(&arg));
 
 	size_t sum = 0;
 
@@ -138,9 +138,9 @@ size_t getNumElements(struct pumaList* list)
 
 static void _destroyThreadListWorker(void* arg)
 {
-	struct pumaList* list = (struct pumaList*)arg;
+	struct pumaSet* set = (struct pumaSet*)arg;
 	size_t thread = pumaGetThreadNum();
-	struct pumaNode* currentNode = list->threadLists[thread].head;
+	struct pumaNode* currentNode = set->threadLists[thread].head;
 
 	while(currentNode != NULL)
 	{
@@ -152,15 +152,15 @@ static void _destroyThreadListWorker(void* arg)
 	}
 }
 
-void destroyPumaList(struct pumaList* list)
+void destroyPumaSet(struct pumaSet* set)
 {
-	VALGRIND_MAKE_MEM_DEFINED(list->threadLists,
-			list->numCores * sizeof(struct pumaThreadList));
+	VALGRIND_MAKE_MEM_DEFINED(set->threadLists,
+			set->numCores * sizeof(struct pumaThreadList));
 	
-	executeOnThreadPool(list->threadPool, &_destroyThreadListWorker, (void*)list);
+	executeOnThreadPool(set->threadPool, &_destroyThreadListWorker, (void*)set);
 
-	free(list->threadLists);
-	free(list->threadListToIndex);
-	free(list->domains);
-	free(list);
+	free(set->threadLists);
+	free(set->threadListToIndex);
+	free(set->domains);
+	free(set);
 }

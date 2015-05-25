@@ -5,7 +5,7 @@
 #include "internal/numa.h"
 #include "internal/valgrind.h"
 
-#include "pumalist.h"
+#include "pumaset.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -177,15 +177,15 @@ size_t _min(size_t a, size_t b)
 	return (a < b) * a + (a >= b) * b;
 }
 
-static void _autobalanceThreadLoad(struct pumaList* list)
+static void _autobalanceThreadLoad(struct pumaSet* set)
 {
 	long avgNodes = 0;
 	size_t numLists = 0;
 	double totalRunTime = 0;
 
-	for(size_t i = 0; i < list->numCores; ++i)
+	for(size_t i = 0; i < set->numCores; ++i)
 	{
-		struct pumaThreadList* tl = list->threadLists + i;
+		struct pumaThreadList* tl = set->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 
 		totalRunTime += tl->totalRunTime;
@@ -194,9 +194,9 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
-	for(size_t i = 0; i < list->numCores; ++i)
+	for(size_t i = 0; i < set->numCores; ++i)
 	{
-		struct pumaThreadList* tl = list->threadLists + i;
+		struct pumaThreadList* tl = set->threadLists + i;
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
@@ -211,9 +211,9 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	size_t rem = avgNodes % numLists;
 	avgNodes /= numLists;
 
-	for(size_t d = 0; d < list->numDomains; ++d)
+	for(size_t d = 0; d < set->numDomains; ++d)
 	{
-		struct pumaDomain* currDomain = list->domains + d;
+		struct pumaDomain* currDomain = set->domains + d;
 		for(size_t c = 0; c < currDomain->numListsInDomain; ++c)
 		{
 			struct pumaThreadList* tl = currDomain->listsInDomain + c;
@@ -257,8 +257,8 @@ static void _autobalanceThreadLoad(struct pumaList* list)
 	}
 }
 
-void _balanceThreadLoad(struct pumaList* list)
+void _balanceThreadLoad(struct pumaSet* set)
 {
-	if(list->autoBalance)
-		_autobalanceThreadLoad(list);
+	if(set->autoBalance)
+		_autobalanceThreadLoad(set);
 }

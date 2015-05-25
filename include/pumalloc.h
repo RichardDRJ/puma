@@ -1,22 +1,22 @@
-#ifndef __PUMALIST__PUMALLOC_H__
-#define __PUMALIST__PUMALLOC_H__
+#ifndef __PUMA__PUMALLOC_H__
+#define __PUMA__PUMALLOC_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "pumalist.h"
+#include "pumaset.h"
 
 #include <stdlib.h>
 
-void* pumalloc(struct pumaList* list);
-void* pumallocManualBalancing(struct pumaList* list, void* balData);
-void* pumallocAutoBalancing(struct pumaList* list, int* allocatedThread);
-void* pumallocOnThread(struct pumaList* list, size_t thread);
+void* pumalloc(struct pumaSet* set);
+void* pumallocManualBalancing(struct pumaSet* set, void* balData);
+void* pumallocAutoBalancing(struct pumaSet* set, int* allocatedThread);
+void* pumallocOnThread(struct pumaSet* set, size_t thread);
 void pufree(void* element);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __PUMALIST__PUMALLOC_H__
+#endif // __PUMA__PUMALLOC_H__

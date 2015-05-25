@@ -5,14 +5,14 @@
 	@brief Declarations of kernel running functions.
 */
 
-#ifndef _PUMALIST__PUMA_KERNEL_H_
-#define _PUMALIST__PUMA_KERNEL_H_
+#ifndef _PUMA__PUMA_KERNEL_H_
+#define _PUMA__PUMA_KERNEL_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "pumalist.h"
+#include "pumaset.h"
 #include "extradata.h"
 
 /**
@@ -23,42 +23,42 @@ extern "C" {
 typedef void (*pumaKernel)(void* element, void* extraData);
 
 /**
-	\brief Run kernel on all elements in list in parallel.
+	\brief Run kernel on all elements in set in parallel.
 
-	\param list The pumaList containing our data.
+	\param set The pumaList containing our data.
 	\param kernel The kernel we want to run.
 	\param extraDataDetails Struct specifying what extra data we want our kernel
 		to receive.
 */
-void runKernel(struct pumaList* list, pumaKernel kernel,
+void runKernel(struct pumaSet* set, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails);
 
 /**
-	\brief Run an array of kernels on all elements in list in parallel.
+	\brief Run an array of kernels on all elements in set in parallel.
 
-	\param list The pumaList containing our data.
+	\param set The pumaList containing our data.
 	\param kernels The kernels we want to run.
 	\param numKernels How many kernels are contained in kernels
 	\param extraDataDetails Struct specifying what extra data we want our
 		kernels to receive.
 */
-void runKernelList(struct pumaList* list, pumaKernel kernels[],
+void runKernelList(struct pumaSet* set, pumaKernel kernels[],
 		size_t numKernels, struct pumaListExtraKernelData* extraDataDetails);
 
 /**
-	\brief Run a kernel on all elements in list which are associated with the
+	\brief Run a kernel on all elements in set which are associated with the
 		current thread.
 
-	\param list The pumaList containing our data.
+	\param set The pumaList containing our data.
 	\param kernel The kernel we want to run.
 	\param extraDataDetails Struct specifying what extra data we want our kernel
 		to receive.
 */
-void runKernelCurrentThread(struct pumaList* list, pumaKernel kernel,
+void runKernelCurrentThread(struct pumaSet* set, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // _PUMALIST__PUMA_KERNEL_H_
+#endif // _PUMA__PUMA_KERNEL_H_

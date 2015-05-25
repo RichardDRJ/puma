@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_
-#define _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_
+#ifndef _PUMA__INTERNAL__PUMA_THREAD_POOL_H_
+#define _PUMA__INTERNAL__PUMA_THREAD_POOL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,4 +29,4 @@ double pumaGetTimeWaitedForPool(void);
 }
 #endif
 
-#endif // _PUMALIST__INTERNAL__PUMA_THREAD_POOL_H_
+#endif // _PUMA__INTERNAL__PUMA_THREAD_POOL_H_

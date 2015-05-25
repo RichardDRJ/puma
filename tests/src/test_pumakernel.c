@@ -29,24 +29,24 @@ char* test_runKernelIteratesOverAll(void)
 	for(size_t elementSize = sizeof(struct testElem);
 			elementSize < 100 + sizeof(struct testElem); ++elementSize)
 	{
-		struct pumaList* list = createPumaList(elementSize, 1, NULL);
+		struct pumaSet* set = createPumaSet(elementSize, 1, NULL);
 		struct testElem** elements =
 				(struct testElem**)malloc(sizeof(struct testElem*) * NUM_ELEMENTS);
 
 		for(size_t i = 0; i < NUM_ELEMENTS; ++i)
-			elements[i] = pumalloc(list);
+			elements[i] = pumalloc(set);
 
-		runKernel(list, &_unTouchKernel, &emptyKernelData);
+		runKernel(set, &_unTouchKernel, &emptyKernelData);
 
 		for(size_t i = 0; i < NUM_ELEMENTS; ++i)
 			mu_assert(!elements[i]->touched, "Element touched when it shouldn't be!");
 
-		runKernel(list, &_touchKernel, &emptyKernelData);
+		runKernel(set, &_touchKernel, &emptyKernelData);
 
 		for(size_t i = 0; i < NUM_ELEMENTS; ++i)
 			mu_assert(elements[i]->touched, "Element untouched when it should be!");
 
-		destroyPumaList(list);
+		destroyPumaSet(set);
 	}
 
 	return NULL;

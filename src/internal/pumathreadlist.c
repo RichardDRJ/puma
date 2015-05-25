@@ -1,15 +1,15 @@
 #include "internal/pumathreadlist.h"
 #include "internal/pumanode.h"
-#include "pumalist.h"
+#include "pumaset.h"
 #include "internal/pumadomain.h"
 #include "internal/valgrind.h"
 
 #include <stdlib.h>
 
-struct pumaThreadList* _getListForCurrentThread(struct pumaList* list)
+struct pumaThreadList* _getListForCurrentThread(struct pumaSet* set)
 {
 	int domainNumber = _getCurrentNumaDomain();
-	struct pumaDomain* d = list->domains + domainNumber;
+	struct pumaDomain* d = set->domains + domainNumber;
 
 	size_t cpuIndex = _getCurrentCPUIndexInDomain();
 

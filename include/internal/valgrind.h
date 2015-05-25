@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__VALGRIND_H_
-#define _PUMALIST__VALGRIND_H_
+#ifndef _PUMA__VALGRIND_H_
+#define _PUMA__VALGRIND_H_
 
 #if defined(NDEBUG) || defined(NOVALGRIND)
 #define VALGRIND_MAKE_MEM_DEFINED(addr, size) (void)(addr); (void)(size)
@@ -13,4 +13,4 @@
 #include <valgrind/memcheck.h>
 #endif
 
-#endif // _PUMALIST__VALGRIND_H_
+#endif // _PUMA__VALGRIND_H_

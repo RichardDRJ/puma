@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__NUMA_H_
-#define _PUMALIST__NUMA_H_
+#ifndef _PUMA__NUMA_H_
+#define _PUMA__NUMA_H_
 
 #ifndef NNUMA
 #include <numa.h>
@@ -12,4 +12,4 @@ void* numalloc_on_node(size_t psize, int domain);
 void nufree(void* ptr, size_t size);
 void nufree_aligned(void* ptr, size_t size);
 
-#endif // _PUMALIST__NUMA_H_
+#endif // _PUMA__NUMA_H_

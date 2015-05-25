@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__PUMASTATICVAR_H_
-#define _PUMALIST__PUMASTATICVAR_H_
+#ifndef _PUMA__PUMASTATICVAR_H_
+#define _PUMA__PUMASTATICVAR_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,4 +14,4 @@ void pumaDeleteStaticData(void);
 }
 #endif
 
-#endif // _PUMALIST__PUMASTATICVAR_H_
+#endif // _PUMA__PUMASTATICVAR_H_

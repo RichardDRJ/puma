@@ -1,8 +1,8 @@
-#ifndef _PUMALIST__PUMA_BALANCE_H_
-#define _PUMALIST__PUMA_BALANCE_H_
+#ifndef _PUMA__PUMA_BALANCE_H_
+#define _PUMA__PUMA_BALANCE_H_
 
-#include "pumalist.h"
+#include "pumaset.h"
 
-void _balanceThreadLoad(struct pumaList* list);
+void _balanceThreadLoad(struct pumaSet* set);
 
-#endif // _PUMALIST__PUMA_BALANCE_H_
+#endif // _PUMA__PUMA_BALANCE_H_

@@ -1,5 +1,5 @@
-#ifndef _PUMALIST__INTERNAL__PUMANODE_H_
-#define _PUMALIST__INTERNAL__PUMANODE_H_
+#ifndef _PUMA__INTERNAL__PUMANODE_H_
+#define _PUMA__INTERNAL__PUMANODE_H_
 
 #include "internal/bitmask.h"
 #include "internal/pumaheader.h"
@@ -46,4 +46,4 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 void _freePumaNode(struct pumaNode* node);
 
 
-#endif // _PUMALIST__INTERNAL__PUMANODE_H_
+#endif // _PUMA__INTERNAL__PUMANODE_H_

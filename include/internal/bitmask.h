@@ -1,5 +1,5 @@
-#ifndef __PUMALIST__BITMASK_H__
-#define __PUMALIST__BITMASK_H__
+#ifndef __PUMA__BITMASK_H__
+#define __PUMA__BITMASK_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -33,4 +33,4 @@ void pumaBitmaskToString(const struct pumaBitmask* const bitmask,
 static const unsigned char MASKFREE = 1;
 static const unsigned char MASKNOTFREE = 0;
 
-#endif // __PUMALIST__BITMASK_H__
+#endif // __PUMA__BITMASK_H__

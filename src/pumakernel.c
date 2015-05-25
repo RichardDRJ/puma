@@ -30,10 +30,10 @@ static void _runKernelOnNode(struct pumaNode* node,
 	}
 }
 
-static void _runKernelThread(struct pumaList* list, pumaKernel kernel,
+static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails, void* extraData)
 {
-	struct pumaThreadList* tl = _getListForCurrentThread(list);
+	struct pumaThreadList* tl = _getListForCurrentThread(set);
 	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 	struct pumaNode* currentNode = tl->head;
 	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
@@ -61,14 +61,14 @@ static void _runKernelThread(struct pumaList* list, pumaKernel kernel,
 	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 }
 
-void runKernelCurrentThread(struct pumaList* list, pumaKernel kernel,
+void runKernelCurrentThread(struct pumaSet* set, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails)
 {
-	_balanceThreadLoad(list);
+	_balanceThreadLoad(set);
 	void* extraData = extraDataDetails->extraDataConstructor(
 			extraDataDetails->constructorData);
 	
-	_runKernelThread(list, kernel, extraDataDetails, extraData);
+	_runKernelThread(set, kernel, extraDataDetails, extraData);
 
 	extraDataDetails->extraDataThreadReduce(extraData);
 
@@ -77,7 +77,7 @@ void runKernelCurrentThread(struct pumaList* list, pumaKernel kernel,
 
 struct _runKernelArg
 {
-	struct pumaList* list;
+	struct pumaSet* set;
 	pumaKernel* kernels;
 	size_t numKernels;
 	struct pumaListExtraKernelData* extraDataDetails;
@@ -92,7 +92,7 @@ static void _runKernelWorker(void* voidArg)
 			->extraDataConstructor(arg->extraDataDetails->constructorData);
 
 	for(size_t i = 0; i < arg->numKernels; ++i)
-		_runKernelThread(arg->list, arg->kernels[i], arg->extraDataDetails,
+		_runKernelThread(arg->set, arg->kernels[i], arg->extraDataDetails,
 				arg->extraData[thread]);
 
 	arg->extraDataDetails->extraDataThreadReduce(arg->extraData[thread]);
@@ -105,34 +105,34 @@ static void _cleanupKernelWorker(void* voidArg)
 	arg->extraDataDetails->extraDataDestructor(arg->extraData[thread]);
 }
 
-void runKernelList(struct pumaList* list, pumaKernel kernels[],
+void runKernelList(struct pumaSet* set, pumaKernel kernels[],
 		size_t numKernels, struct pumaListExtraKernelData* extraDataDetails)
 {
-	_balanceThreadLoad(list);
+	_balanceThreadLoad(set);
 
-	unsigned int numThreads = pumaGetNumThreads(list->threadPool);
+	unsigned int numThreads = pumaGetNumThreads(set->threadPool);
 	void* extraData[numThreads];
 
 	if(extraDataDetails == NULL)
 		extraDataDetails = &emptyKernelData;
 
 	struct _runKernelArg arg;
-	arg.list = list;
+	arg.set = set;
 	arg.kernels = kernels;
 	arg.numKernels = numKernels;
 	arg.extraDataDetails = extraDataDetails;
 	arg.extraData = extraData;
 
-	executeOnThreadPool(list->threadPool, _runKernelWorker, (void*)(&arg));
+	executeOnThreadPool(set->threadPool, _runKernelWorker, (void*)(&arg));
 
 	extraDataDetails->extraDataReduce(extraDataDetails->retValue,
 			extraData, numThreads);
 
-	executeOnThreadPool(list->threadPool, _cleanupKernelWorker, (void*)(&arg));
+	executeOnThreadPool(set->threadPool, _cleanupKernelWorker, (void*)(&arg));
 }
 
-void runKernel(struct pumaList* list, pumaKernel kernel,
+void runKernel(struct pumaSet* set, pumaKernel kernel,
 		struct pumaListExtraKernelData* extraDataDetails)
 {
-	runKernelList(list, &kernel, 1, extraDataDetails);
+	runKernelList(set, &kernel, 1, extraDataDetails);
 }

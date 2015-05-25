@@ -5,8 +5,8 @@
 	@brief Definitions of stuff relating to extra data for kernels.
 */
 
-#ifndef _PUMALIST__EXTRADATA_H_
-#define _PUMALIST__EXTRADATA_H_
+#ifndef _PUMA__EXTRADATA_H_
+#define _PUMA__EXTRADATA_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,4 +75,4 @@ extern struct pumaListExtraKernelData emptyKernelData;
 }
 #endif
 
-#endif // _PUMALIST__EXTRADATA_H_
+#endif // _PUMA__EXTRADATA_H_

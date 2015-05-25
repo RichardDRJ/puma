@@ -38,46 +38,46 @@ void* _pumallocOnThreadList(struct pumaThreadList* threadList)
 	return newElement;
 }
 
-void* pumallocManualBalancing(struct pumaList* list, void* balData)
+void* pumallocManualBalancing(struct pumaSet* set, void* balData)
 {
-	size_t index = list->splitter(balData, list->numThreads,
-			list->splitterExtraData);
-	size_t adjustedIndex = list->threadListToIndex[index];
-	struct pumaThreadList* threadList = &list->threadLists[adjustedIndex];
+	size_t index = set->splitter(balData, set->numThreads,
+			set->splitterExtraData);
+	size_t adjustedIndex = set->threadListToIndex[index];
+	struct pumaThreadList* threadList = &set->threadLists[adjustedIndex];
 	return _pumallocOnThreadList(threadList);
 }
 
-void* pumalloc(struct pumaList* list)
+void* pumalloc(struct pumaSet* set)
 {
-	struct pumaThreadList* threadList = _getListForCurrentThread(list);
+	struct pumaThreadList* threadList = _getListForCurrentThread(set);
 	return _pumallocOnThreadList(threadList);
 }
 
-void* pumallocAutoBalancing(struct pumaList* list, int* allocatedThread)
+void* pumallocAutoBalancing(struct pumaSet* set, int* allocatedThread)
 {
 	size_t minThread = 0;
 
-	VALGRIND_MAKE_MEM_DEFINED(list->threadLists,
-			sizeof(struct pumaThreadList) * list->numCores);
-	for(size_t thread = 1; thread < list->numCores; ++thread)
+	VALGRIND_MAKE_MEM_DEFINED(set->threadLists,
+			sizeof(struct pumaThreadList) * set->numCores);
+	for(size_t thread = 1; thread < set->numCores; ++thread)
 	{
-		struct pumaThreadList* tmpThreadList = list->threadLists + thread;
-		if(tmpThreadList->active && tmpThreadList->numElements < list->threadLists[minThread].numElements)
+		struct pumaThreadList* tmpThreadList = set->threadLists + thread;
+		if(tmpThreadList->active && tmpThreadList->numElements < set->threadLists[minThread].numElements)
 			minThread = thread;
 	}
 
 	if(allocatedThread != NULL)
-		*allocatedThread = list->threadLists[minThread].tid;
+		*allocatedThread = set->threadLists[minThread].tid;
 
-	VALGRIND_MAKE_MEM_NOACCESS(list->threadLists,
-			sizeof(struct pumaThreadList) * list->numCores);
+	VALGRIND_MAKE_MEM_NOACCESS(set->threadLists,
+			sizeof(struct pumaThreadList) * set->numCores);
 
-	return pumallocOnThread(list, minThread);
+	return pumallocOnThread(set, minThread);
 }
 
-void* pumallocOnThread(struct pumaList* list, size_t thread)
+void* pumallocOnThread(struct pumaSet* set, size_t thread)
 {
-	struct pumaThreadList* threadList = list->threadLists + thread;
+	struct pumaThreadList* threadList = set->threadLists + thread;
 
 	return _pumallocOnThreadList(threadList);
 }

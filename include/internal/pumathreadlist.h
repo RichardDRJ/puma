@@ -1,12 +1,12 @@
-#ifndef _PUMALIST__PUMA_THREAD_LIST_H_
-#define _PUMALIST__PUMA_THREAD_LIST_H_
+#ifndef _PUMA__PUMA_THREAD_LIST_H_
+#define _PUMA__PUMA_THREAD_LIST_H_
 
 #include <stdlib.h>
 #include "internal/pumanode.h"
 
 #define NUM_KERNEL_RUNTIMES 5
 
-struct pumaList;
+struct pumaSet;
 
 struct pumaThreadList
 {
@@ -30,7 +30,7 @@ struct pumaThreadList
 	double kernelRunTimes[NUM_KERNEL_RUNTIMES];
 };
 
-struct pumaThreadList* _getListForCurrentThread(struct pumaList* list);
+struct pumaThreadList* _getListForCurrentThread(struct pumaSet* set);
 void _emptyThreadList(struct pumaThreadList* tl);
 
-#endif // _PUMALIST__PUMA_THREAD_LIST_H_
+#endif // _PUMA__PUMA_THREAD_LIST_H_
