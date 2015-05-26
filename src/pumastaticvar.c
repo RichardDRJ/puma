@@ -1,6 +1,7 @@
 #include "pumastaticvar.h"
 #include "internal/numa.h"
 #include "internal/pumadomain.h"
+#include "internal/pumautil.h"
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -51,11 +52,6 @@ static void _initialiseStaticNodes(void)
 	pthread_key_create(&_staticTailKey, NULL);
 }
 
-static inline size_t _getSmallestContainingNode(const size_t size)
-{
-	return (size & ~(pumaPageSize - 1)) + pumaPageSize;
-}
-
 void* pumallocStaticLocal(const size_t size)
 {
 	void* ret;
@@ -64,7 +60,7 @@ void* pumallocStaticLocal(const size_t size)
 	if(pthread_getspecific(_staticHeadKey) == NULL)
 	{
 		struct pumaStaticNode* newHead = _appendStaticNode(NULL,
-				_getSmallestContainingNode(size));
+				_getSmallestContainingPages(size));
 
 		pthread_setspecific(_staticHeadKey, newHead);
 		pthread_setspecific(_staticTailKey, newHead);
@@ -73,7 +69,7 @@ void* pumallocStaticLocal(const size_t size)
 	struct pumaStaticNode* tail = pthread_getspecific(_staticTailKey);
 
 	if(!_tailHasSpace(size))
-		tail = _appendStaticNode(tail, _getSmallestContainingNode(size));
+		tail = _appendStaticNode(tail, _getSmallestContainingPages(size));
 
 	ret = tail->nextFree;
 	tail->nextFree += size;

@@ -14,5 +14,7 @@ size_t _getNumDomains(void);
 size_t _getNumCPUs(void);
 size_t _getCurrentCPUIndexInDomain(void);
 size_t _getNumCPUsInDomain(int domain);
+void destroyDomain(struct pumaDomain* domain);
+void initDomain(struct pumaDomain* domain, size_t domainNumber);
 
 #endif // _PUMA__INTERNAL__PUMA_DOMAIN_H_

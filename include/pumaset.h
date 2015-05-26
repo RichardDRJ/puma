@@ -43,11 +43,10 @@ struct pumaSet
 	// Private members:
 	struct pumaDomain* domains;
 	size_t numDomains;
-	struct pumaThreadList* threadLists;
 	size_t numCores;
 	size_t numThreads;
 
-	size_t* threadListToIndex;
+	struct pumaThreadList** tidToThreadList;
 
 	bool autoBalance;
 	splitterFunc* splitter;
@@ -83,7 +82,7 @@ size_t getNumElements(struct pumaSet* set);
 	If it's true, we balance based on previous execution time and the amount of
 	data associated with each thread.
 */
-void pumaListSetBalancer(struct pumaSet* set, bool autoBalance,
+void pumaSetBalancer(struct pumaSet* set, bool autoBalance,
 		splitterFunc* splitter, void* splitterExtraData);
 
 #ifdef __cplusplus

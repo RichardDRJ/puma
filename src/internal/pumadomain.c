@@ -2,6 +2,8 @@
 #include <sched.h>
 
 #include "internal/pumadomain.h"
+#include "internal/pumautil.h"
+#include "internal/pumathreadlist.h"
 #include "internal/numa.h"
 #include "pumathreadpool.h"
 
@@ -77,4 +79,27 @@ size_t _getNumCPUsInDomain(int domain)
 
 	return index;
 #endif
+}
+
+void destroyDomain(struct pumaDomain* domain)
+{
+	size_t domNumCores = domain->numListsInDomain;
+	size_t domListSize =
+			_getSmallestContainingPages(domNumCores * sizeof(struct pumaThreadList));
+	nufree(domain->listsInDomain, domListSize);
+}
+
+void initDomain(struct pumaDomain* domain, size_t domainNumber)
+{
+	size_t domNumCores = _getNumCPUsInDomain(domainNumber);
+	domain->numListsInDomain = domNumCores;
+	size_t domListSize =
+			_getSmallestContainingPages(domNumCores * sizeof(struct pumaThreadList));
+	domain->listsInDomain = numalloc_on_node(domListSize, domainNumber);
+
+	for(size_t i = 0; i < domNumCores; ++i)
+	{
+		VALGRIND_MAKE_MEM_NOACCESS(domain->listsInDomain + i,
+				sizeof(struct pumaThreadList));
+	}
 }

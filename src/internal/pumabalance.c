@@ -183,9 +183,9 @@ static void _autobalanceThreadLoad(struct pumaSet* set)
 	size_t numLists = 0;
 	double totalRunTime = 0;
 
-	for(size_t i = 0; i < set->numCores; ++i)
+	for(size_t i = 0; i < set->numThreads; ++i)
 	{
-		struct pumaThreadList* tl = set->threadLists + i;
+		struct pumaThreadList* tl = set->tidToThreadList[i];
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 
 		totalRunTime += tl->totalRunTime;
@@ -194,9 +194,9 @@ static void _autobalanceThreadLoad(struct pumaSet* set)
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
 	}
 
-	for(size_t i = 0; i < set->numCores; ++i)
+	for(size_t i = 0; i < set->numThreads; ++i)
 	{
-		struct pumaThreadList* tl = set->threadLists + i;
+		struct pumaThreadList* tl = set->tidToThreadList[i];
 		VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
 		tl->relativeSpeed = ((numLists + 1.0) / numLists) - (tl->totalRunTime / totalRunTime);
 		VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));

@@ -11,8 +11,7 @@ extern "C" {
 
 void* pumalloc(struct pumaSet* set);
 void* pumallocManualBalancing(struct pumaSet* set, void* balData);
-void* pumallocAutoBalancing(struct pumaSet* set, int* allocatedThread);
-void* pumallocOnThread(struct pumaSet* set, size_t thread);
+void* pumallocAutoBalancing(struct pumaSet* set);
 void pufree(void* element);
 
 #ifdef __cplusplus
