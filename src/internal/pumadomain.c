@@ -66,6 +66,7 @@ size_t _getNumCPUs(void)
 
 size_t _getNumCPUsInDomain(int domain)
 {
+	(void)domain;
 #ifdef NNUMA
 	return _getNumCPUs();
 #else

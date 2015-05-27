@@ -17,6 +17,7 @@
 
 void* numalloc_on_node(size_t psize, int domain)
 {
+	(void)domain;
 	void* ret = mmap(NULL, psize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 #ifndef NNUMA
@@ -47,6 +48,7 @@ void* numalloc_on_node(size_t psize, int domain)
 
 void* numalloc_aligned_on_node(size_t psize, int domain)
 {
+	(void)domain;
 	void* ret;
 
 	int status = posix_memalign(&ret, psize, psize);
@@ -70,7 +72,6 @@ void* numalloc_aligned_on_node(size_t psize, int domain)
 
 	assert(status == 0 || (printf("mbind failed: %d\n", errno), false));
 #endif // NNUMA
-	
 
 	assert(ret == (struct pumaNode*)((size_t)ret & ~((pumaPageSize * PUMA_NODEPAGES) - 1)));
 
@@ -84,5 +85,6 @@ void nufree(void* ptr, size_t size)
 
 void nufree_aligned(void* ptr, size_t size)
 {
+	(void)size;
 	free(ptr);
 }

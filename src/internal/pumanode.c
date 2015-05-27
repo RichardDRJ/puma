@@ -60,22 +60,30 @@ size_t _getBiggestCacheSize()
 	int stats[] = {
 			#ifdef _SC_LEVEL4_CACHE_SIZE
 			_SC_LEVEL4_CACHE_SIZE,
+			#else
+			0,
 			#endif
 
 			#ifdef _SC_LEVEL3_CACHE_SIZE
 			_SC_LEVEL3_CACHE_SIZE,
+			#else
+			0,
 			#endif
 
 			#ifdef _SC_LEVEL2_CACHE_SIZE
 			_SC_LEVEL2_CACHE_SIZE,
+			#else
+			0,
 			#endif
 
 			#ifdef _SC_LEVEL1_CACHE_SIZE
 			_SC_LEVEL1_CACHE_SIZE,
+			#else
+			0,
 			#endif
 	};
 
-	int level = 0;
+	unsigned int level = 0;
 
 	while(cacheSize <= 0 && level < sizeof(stats) / sizeof(int))
 		cacheSize = (size_t)sysconf(stats[level++]);

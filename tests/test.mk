@@ -25,10 +25,11 @@ TEST_INCFLAGS	:= $(addprefix -I,$(TEST_INCDIRS))
 
 TEST_DEFS		:=
 
-TEST_CFLAGS		= -std=gnu99 -Wall -Wextra -Werror -pedantic -O0 -g
-TEST_CXXFLAGS	= -std=c++11 -Wall -Wextra -Werror -pedantic -O0 -g
-TEST_CFLAGS 	+= -DNNUMA -DNOVALGRIND
-TEST_CXXFLAGS	+= -DNNUMA -DNOVALGRIND
+TEST_CFLAGS		:= $(CFLAGS)
+TEST_CXXFLAGS	:= $(CXXFLAGS)
+
+TEST_CFLAGS		+= -std=c99 -Wall -Wextra -Werror -pedantic -O0 -g
+TEST_CXXFLAGS	+= -std=c++11 -Wall -Wextra -Werror -pedantic -O0 -g
 TEST_FOLDERS	= $(TEST_BINDIR) $(TEST_BINMODS) $(TEST_BUILDDIR) $(TEST_BUILDMODS)
 
 .PHONY: test test_clean

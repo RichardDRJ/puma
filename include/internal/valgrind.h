@@ -1,7 +1,7 @@
 #ifndef _PUMA__VALGRIND_H_
 #define _PUMA__VALGRIND_H_
 
-#if defined(NDEBUG) || defined(NOVALGRIND)
+#if defined(NOVALGRIND)
 #define VALGRIND_MAKE_MEM_DEFINED(addr, size) (void)(addr); (void)(size)
 #define VALGRIND_MAKE_MEM_NOACCESS(addr, size) (void)(addr); (void)(size)
 #define VALGRIND_MAKE_MEM_UNDEFINED(addr, size) (void)(addr); (void)(size)

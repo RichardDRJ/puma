@@ -25,8 +25,8 @@ OBJECTS		:= $(COBJECTS) $(CXXOBJECTS)
 
 INCFLAGS	= $(addprefix -I,$(INCDIRS))
 
-CFLAGS		= -std=gnu99 -Wunused-variable -g -fPIC -DNOVALGRIND -DNDEBUG -O2
-CXXFLAGS	= -std=c++11 -Wunused-variable -g -fPIC -DNOVALGRIND -DNDEBUG -O2
+CFLAGS		= -std=c99 -Wunused-variable -g -fPIC -O2 -Wall -Wextra -Werror -pedantic
+CXXFLAGS	= -std=c++11 -Wunused-variable -g -fPIC -O2 -Wall -Wextra -Werror -pedantic
 
 LDFLAGS		= -shared -pthread
 
@@ -34,22 +34,11 @@ FOLDERS		= $(BINDIR) $(BINMODS) $(BUILDDIR) $(BUILDMODS)
 
 DOXYGEN_CONF	:= $(DOCDIR)/doxygen.cfg
 
-ifdef PUMA_NODEPAGES
-	CFLAGS		+= -DPUMA_NODEPAGES=$(PUMA_NODEPAGES)
-	CXXFLAGS	+= -DPUMA_NODEPAGES=$(PUMA_NODEPAGES)
-endif
-
-ifdef STATIC_THREADPOOL
-	CFLAGS		+= -DSTATIC_THREADPOOL
-	CXXFLAGS	+= -DSTATIC_THREADPOOL
-endif
-
-ifdef NOOPENMP
-	CFLAGS		+= -DNOOPENMP
-else
-	CFLAGS		+= -openmp
-	LDFLAGS 	+= -openmp
-endif
+VALGRIND			?= 1
+DEBUG				?= 0
+STATIC_THREADPOOL	?= 0
+NUMA				?= 1
+OPENMP				?= 0
 
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
@@ -61,13 +50,45 @@ ifeq ($(OS),Linux)
 	LINKER		= icc
 	EXT			= so
 else ifeq ($(OS),Darwin)
-	CFLAGS		+= -DNOOPENMP
-	CFLAGS 		+= -DNNUMA -DNOVALGRIND
-	CXXFLAGS	+= -DNNUMA -DNOVALGRIND
+	VALGRIND	= 0
+	NUMA		= 0
+	OPENMP		= 0
 	CC			= gcc
 	CXX			= g++
 	LINKER		= gcc
 	EXT			= dylib
+endif
+
+ifeq ($(VALGRIND),0)
+	CFLAGS		+= -DNOVALGRIND
+	CXXFLAGS	+= -DNOVALGRIND
+endif
+
+ifeq ($(DEBUG),0)
+	CFLAGS		+= -DNDEBUG
+	CXXFLAGS	+= -DNNDEBUG
+endif
+
+ifdef PUMA_MINNODEPAGES
+	CFLAGS		+= -DPUMA_MINNODEPAGES=$(PUMA_MINNODEPAGES)
+	CXXFLAGS	+= -DPUMA_MINNODEPAGES=$(PUMA_MINNODEPAGES)
+endif
+
+ifeq ($(STATIC_THREADPOOL),1)
+	CFLAGS		+= -DSTATIC_THREADPOOL
+	CXXFLAGS	+= -DSTATIC_THREADPOOL
+endif
+
+ifeq ($(NUMA),0)
+	CFLAGS		+= -DNNUMA
+	CXXFLAGS	+= -DNNUMA
+endif
+
+ifeq ($(OPENMP),0)
+	CFLAGS		+= -DNOOPENMP
+else
+	CFLAGS		+= -openmp
+	LDFLAGS 	+= -openmp
 endif
 
 TARGET		:= $(BINDIR)/libpuma.$(EXT)

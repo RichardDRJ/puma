@@ -31,7 +31,7 @@ static void _runKernelOnNode(struct pumaNode* node,
 }
 
 static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
-		struct pumaExtraKernelData* extraDataDetails, void* extraData)
+		void* extraData)
 {
 	struct pumaThreadList* tl = _getListForCurrentThread(set);
 	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
@@ -68,7 +68,7 @@ void runKernelCurrentThread(struct pumaSet* set, pumaKernel kernel,
 	void* extraData = extraDataDetails->extraDataConstructor(
 			extraDataDetails->constructorData);
 	
-	_runKernelThread(set, kernel, extraDataDetails, extraData);
+	_runKernelThread(set, kernel, extraData);
 
 	extraDataDetails->extraDataThreadReduce(extraData);
 
@@ -92,8 +92,7 @@ static void _runKernelWorker(void* voidArg)
 			->extraDataConstructor(arg->extraDataDetails->constructorData);
 
 	for(size_t i = 0; i < arg->numKernels; ++i)
-		_runKernelThread(arg->set, arg->kernels[i], arg->extraDataDetails,
-				arg->extraData[thread]);
+		_runKernelThread(arg->set, arg->kernels[i], arg->extraData[thread]);
 
 	arg->extraDataDetails->extraDataThreadReduce(arg->extraData[thread]);
 }

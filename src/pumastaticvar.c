@@ -29,7 +29,7 @@ static struct pumaStaticNode* _appendStaticNode(struct pumaStaticNode* prev,
 {
 	int domain = _getCurrentNumaDomain();
 	struct pumaStaticNode* ret = numalloc_on_node(nodeSize, domain);
-	ret->nextFree = (void*)ret + sizeof(struct pumaStaticNode);
+	ret->nextFree = (char*)ret + sizeof(struct pumaStaticNode);
 	ret->used = 0;
 	ret->blockSize = nodeSize;
 	ret->next = NULL;
@@ -72,7 +72,7 @@ void* pumallocStaticLocal(const size_t size)
 		tail = _appendStaticNode(tail, _getSmallestContainingPages(size));
 
 	ret = tail->nextFree;
-	tail->nextFree += size;
+	tail->nextFree = (char*)tail->nextFree + size;
 	tail->used += size;
 
 	return ret;

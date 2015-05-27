@@ -231,11 +231,13 @@ struct pumaThreadPool* getThreadPool(void)
 
 void setupThreadPool(size_t numThreads, char* affinityStr)
 {
+	(void)affinityStr;
 	if(_setupComplete)
 		return;
 #else
 struct pumaThreadPool* createThreadPool(size_t numThreads, char* affinityStr)
 {
+	(void)affinityStr;
 	struct pumaThreadPool* threadPool;
 #endif
 	threadPool = (struct pumaThreadPool*)calloc(1, sizeof(struct pumaThreadPool));
