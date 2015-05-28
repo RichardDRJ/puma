@@ -53,9 +53,10 @@ static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
 	}
 	)
 	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-	tl->totalRunTime -= tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->lastNRunTime -= tl->kernelRunTimes[tl->nextRunTimeSlot];
 	tl->kernelRunTimes[tl->nextRunTimeSlot] = GET_ELAPSED_S(runKernel);
-	tl->totalRunTime += tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->lastNRunTime += tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->latestRunTime = tl->kernelRunTimes[tl->nextRunTimeSlot];
 	++tl->nextRunTimeSlot;
 	tl->nextRunTimeSlot %= NUM_KERNEL_RUNTIMES;
 	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
@@ -104,12 +105,26 @@ static void _cleanupKernelWorker(void* voidArg)
 	arg->extraDataDetails->extraDataDestructor(arg->extraData[thread]);
 }
 
+double getLastMaxKernelRuntime(struct pumaSet* set)
+{
+	double max = 0;
+
+	for(size_t thread = 0; thread < set->numThreads; ++thread)
+	{
+		struct pumaThreadList* tl = _getListForCurrentThread(set);
+		if(tl->latestRunTime > max)
+			max = tl->latestRunTime;
+	}
+
+	return max;
+}
+
 void runKernelList(struct pumaSet* set, pumaKernel kernels[],
 		size_t numKernels, struct pumaExtraKernelData* extraDataDetails)
 {
 	_balanceThreadLoad(set);
 
-	unsigned int numThreads = pumaGetNumThreads(set->threadPool);
+	unsigned int numThreads = set->numThreads;
 	void* extraData[numThreads];
 
 	if(extraDataDetails == NULL)
