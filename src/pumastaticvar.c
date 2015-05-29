@@ -25,9 +25,10 @@ static pthread_key_t _staticTailKey;
 static pthread_once_t _initialiseOnce = PTHREAD_ONCE_INIT;
 
 static struct pumaStaticNode* _appendStaticNode(struct pumaStaticNode* prev,
-		const size_t nodeSize)
+		size_t nodeSize)
 {
 	int domain = _getCurrentNumaDomain();
+	nodeSize += sizeof(struct pumaStaticNode);
 	struct pumaStaticNode* ret = numalloc_on_node(nodeSize, domain);
 	ret->nextFree = (char*)ret + sizeof(struct pumaStaticNode);
 	ret->used = 0;
