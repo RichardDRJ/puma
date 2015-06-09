@@ -111,12 +111,21 @@ double getLastMaxKernelRuntime(struct pumaSet* set)
 
 	for(size_t thread = 0; thread < set->numThreads; ++thread)
 	{
-		struct pumaThreadList* tl = _getListForCurrentThread(set);
+		struct pumaThreadList* tl = set->tidToThreadList[thread];
 		if(tl->latestRunTime > max)
 			max = tl->latestRunTime;
 	}
 
 	return max;
+}
+
+void getLastKernelRuntimes(struct pumaSet* set, double* times)
+{
+	for(size_t thread = 0; thread < set->numThreads; ++thread)
+	{
+		struct pumaThreadList* tl = set->tidToThreadList[thread];
+		times[thread] = tl->latestRunTime;
+	}
 }
 
 void runKernelList(struct pumaSet* set, pumaKernel kernels[],
