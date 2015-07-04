@@ -38,7 +38,7 @@ VALGRIND			?= 1
 DEBUG				?= 0
 STATIC_THREADPOOL	?= 0
 NUMA				?= 1
-OPENMP				?= 0
+OPENMP				?= 1
 
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
@@ -54,7 +54,7 @@ else ifeq ($(OS),Darwin)
 	NUMA		= 0
 	OPENMP		= 0
 	CC			= gcc
-	CXX			= g++
+	CXX			= gcc -x c++
 	LINKER		= gcc
 	EXT			= dylib
 endif
