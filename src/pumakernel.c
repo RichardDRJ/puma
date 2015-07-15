@@ -11,13 +11,16 @@
 #include <assert.h>
 #include "internal/numa.h"
 
-static void _runKernelOnNode(struct pumaNode* node,
-		pumaKernel kernel, void* extraData)
+static void _runKernelOnNode(struct pumaNode* node, pumaKernel kernel,
+		void* extraData, size_t* elementsDone, size_t numElements)
 {
 	size_t skippedElements = 0;
 	size_t originalElements = node->numElements;
 
-	for(size_t i = 0; i - skippedElements < originalElements && i < node->capacity; ++i)
+	size_t i = 0;
+
+	while(i - skippedElements < originalElements && i < node->capacity &&
+			*elementsDone < numElements)
 	{
 		if(pumaBitmaskGet(&node->freeMask, i) == MASKFREE)
 		{
@@ -27,7 +30,10 @@ static void _runKernelOnNode(struct pumaNode* node,
 
 		void* currentElement = _getElement(node, i);
 		kernel(currentElement, extraData);
+		++i;
 	}
+
+	*elementsDone += i;
 }
 
 static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
@@ -40,14 +46,19 @@ static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
 
 	assert(tl->numaDomain == _getCurrentNumaDomain());
 
+	size_t elementsDone = 0;
+	size_t initNumElements = tl->numElements;
+
 	PROFILING_DECLS(runKernel);
 	PROFILE(runKernel,
-	while(currentNode != NULL && currentNode->active)
+	while(currentNode != NULL && currentNode->active &&
+			elementsDone < initNumElements)
 	{
 		if(currentNode->dirty)
 			_cleanupNode(currentNode, tl);
 
-		_runKernelOnNode(currentNode, kernel, extraData);
+		_runKernelOnNode(currentNode, kernel, extraData, &elementsDone,
+				initNumElements);
 
 		currentNode = currentNode->next;
 	}
