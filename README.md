@@ -123,7 +123,7 @@ memory page long. We have a 1:1 mapping of threads to cores, enabling a
 mostly lock-free design. This allows us to have correct multithreaded
 code while minimising time-consuming context switches.
 
-[2] ![image](images/thread_lists.png)
+![image](images/thread_lists.png)
 
 ### Memory Pools
 
