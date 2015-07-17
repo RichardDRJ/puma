@@ -1,9 +1,7 @@
 PUMA
 ====
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**Table of Contents**
 
 - [Compilation](#compilation)
   - [Dependencies](#dependencies)
@@ -16,8 +14,6 @@ PUMA
   - [Static Data Allocation](#static-data-allocation)
 - [Getting Started: Standard Deviation Hello World!](#getting-started-standard-deviation-hello-world)
 - [Licence](#licence)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 PUMA is a smart memory allocator that manages data in a NUMA-aware way. It
 exposes an interface to execute a kernel on the data in parallel, automatically
