@@ -32,7 +32,7 @@ PUMA
 
 Moore’s Law states that every eighteen months to two years, the number
 of transistors per square inch on an integrated circuit approximately
-doubles@Moore:1965, effectively leading to a proportional performance
+doubles, effectively leading to a proportional performance
 gain. However, in the early twenty-first century, transistor size
 reduction began to slow down, limiting the growth of complexity in
 high-performance applications which was afforded by increasing computing
@@ -371,13 +371,13 @@ Challenges
 
 One of the most challenging aspects of developing PUMA was identifying
 the location and type of bottlenecks. Most profiling tools we
-encountered, such as Intel’s VTune Amplifier@website:Intel:VTune and GNU
-gprof@website:GNU:gprof are time- or cycle-based. VTune also provides
+encountered, such as Intel’s VTune Amplifier and GNU
+gprof are time- or cycle-based. VTune also provides
 metrics to do with how OpenMP is utilised. However, finding hotspots of
 cross-domain activity was still a matter of making educated guesses
 based on abnormal timing results from profilers.
 
-VTune and a profiler called Likwid@website:Likwid also provide access to
+VTune and a profiler called Likwid also provide access to
 hardware counters, which can be useful for profiling cross-domain
 accesses. However, without superuser access, it can be difficult to
 obtain hardware counter-based results from these tools which can be used
@@ -389,7 +389,7 @@ shown, meaning that identifying hotspots is still a matter of guesswork.
 Because PUMA includes a memory allocator, we encountered several bugs
 regarding accessing invalid memory and corrupting header data.
 
-In order to prevent these bugs, we use Valgrind’s@website:valgrind error
+In order to prevent these bugs, we use Valgrind’s error
 detection interface to make our allocator compatible with Valgrind’s
 memcheck utility. This enables Valgrind to alert the user if they are
 reading from uninitialised memory or writing to un-allocated or
@@ -423,7 +423,7 @@ non-NUMA machine. While it is not particularly useful for gathering
 timing data, the qemu virtual machine has a configuration option
 enabling NUMA simulation, even on non-NUMA machines. This can be useful
 for testing robustness and correctness of NUMA-aware
-applications.@website:qemukvm:manpage.
+applications..
 
 Compilation
 ===========
@@ -515,7 +515,7 @@ We examined two possible strategies for the implementation of such a
 profiler:
 
 -   Using some debugging library (such as LLDB’s C++
-    API@website:LLDB:API) to trap every memory access and determine the
+    API) to trap every memory access and determine the
     physical location of the accessed address in order to count
     off-domain accesses;
 
@@ -934,7 +934,7 @@ In order to compile this tutorial, use the following command:
 Licence
 =======
 
-PUMA is released under the three-clause BSD licence@website:Licence:BSD.
+PUMA is released under the three-clause BSD licence.
 We chose this rather than a copyleft licence like GPL or LGPL in order
 to allow anyone to use PUMA with absolute freedom aside from the
 inclusion of a short copyright notice.
