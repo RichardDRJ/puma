@@ -1,3 +1,35 @@
+PUMA
+====
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Design and Implementation](#design-and-implementation)
+  - [Dynamic Memory Allocator](#dynamic-memory-allocator)
+    - [Memory Pools](#memory-pools)
+    - [Element Headers](#element-headers)
+  - [Static Data](#static-data)
+  - [Kernel Application](#kernel-application)
+    - [Load Balancer](#load-balancer)
+  - [Challenges](#challenges)
+    - [Profiling](#profiling)
+    - [Invalid Memory Accesses](#invalid-memory-accesses)
+    - [Local vs. Remote Testing](#local-vs-remote-testing)
+- [Compilation](#compilation)
+  - [Dependencies](#dependencies)
+  - [Configuration](#configuration)
+- [Future Work](#future-work)
+- [API Reference](#api-reference)
+  - [PUMA Set Management](#puma-set-management)
+  - [Memory Allocation](#memory-allocation)
+  - [Kernel Application](#kernel-application-1)
+  - [Static Data Allocation](#static-data-allocation)
+- [Getting Started: Standard Deviation Hello World!](#getting-started-standard-deviation-hello-world)
+- [Licence](#licence)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 Moore’s Law states that every eighteen months to two years, the number
 of transistors per square inch on an integrated circuit approximately
 doubles@Moore:1965, effectively leading to a proportional performance
@@ -39,7 +71,7 @@ time-based load balancer which can adapt workloads to cases where some
 cores may have be less powerful or have more to do per kernel invocation
 than others.
 
-Design and Implementation {#chap:design_impl}
+Design and Implementation
 =========================
 
 PUMA consists of several parts:
@@ -335,7 +367,7 @@ in order to increase its workload.
 Challenges
 ----------
 
-### Profiling {#sec:challenges:profiling}
+### Profiling
 
 One of the most challenging aspects of developing PUMA was identifying
 the location and type of bottlenecks. Most profiling tools we
@@ -450,7 +482,7 @@ performance-critical code.
 
 -   DEBUG: Enable assertions. Default disabled
 
-Future Work {#sec:future_work}
+Future Work
 ===========
 
 We have designed PUMA to internally abstract away OS-specific interfaces
@@ -721,7 +753,7 @@ Arguments:
 
 Deletes all static data associated with the current thread.
 
-Getting Started: Standard Deviation Hello World! {#chap:getting_started}
+Getting Started: Standard Deviation Hello World!
 ================================================
 
 In lieu of the traditional “Hello World” introductory program, we
