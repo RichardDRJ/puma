@@ -66,7 +66,8 @@ struct pumaSet* createPumaSet(size_t elementSize, size_t numThreads,
 
 	size_t numDomains = _getNumDomains();
 	newList->numDomains = numDomains;
-	newList->domains = (struct pumaDomain*)calloc(numDomains, sizeof(struct pumaDomain));
+	newList->domains =
+			(struct pumaDomain*)calloc(numDomains, sizeof(struct pumaDomain));
 	newList->autoBalance = true;
 
 	for(size_t i = 0; i < numDomains; ++i)
