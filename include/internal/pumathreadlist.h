@@ -24,8 +24,10 @@ struct pumaThreadList
 
 	int tid;
 
+	double latestRunTime;
+
 	double relativeSpeed;
-	double totalRunTime;
+	double lastNRunTime;
 	size_t nextRunTimeSlot;
 	double kernelRunTimes[NUM_KERNEL_RUNTIMES];
 };

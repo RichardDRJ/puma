@@ -97,7 +97,6 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 	VALGRIND_MAKE_MEM_DEFINED(threadList, sizeof(struct pumaThreadList));
 	struct pumaNode* tail = threadList->tail;
 	int nextIndex = 0;
-	bool reuse = true;
 
 	struct pumaNode* retNode;
 
@@ -120,8 +119,6 @@ struct pumaNode* _appendPumaNode(struct pumaThreadList* threadList,
 			goto done;
 		}
 	}
-
-	reuse = false;
 
 	size_t nodeSize = pumaPageSize * PUMA_NODEPAGES;
 

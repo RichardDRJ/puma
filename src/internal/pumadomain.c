@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 
 int _getCurrentNumaDomain(void)
 {
@@ -97,6 +98,7 @@ void initDomain(struct pumaDomain* domain, size_t domainNumber)
 	size_t domListSize =
 			_getSmallestContainingPages(domNumCores * sizeof(struct pumaThreadList));
 	domain->listsInDomain = numalloc_on_node(domListSize, domainNumber);
+	memset(domain->listsInDomain, 0, domListSize);
 
 	for(size_t i = 0; i < domNumCores; ++i)
 	{

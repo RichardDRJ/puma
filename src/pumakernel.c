@@ -11,13 +11,16 @@
 #include <assert.h>
 #include "internal/numa.h"
 
-static void _runKernelOnNode(struct pumaNode* node,
-		pumaKernel kernel, void* extraData)
+static void _runKernelOnNode(struct pumaNode* node, pumaKernel kernel,
+		void* extraData, size_t* elementsDone, size_t numElements)
 {
 	size_t skippedElements = 0;
 	size_t originalElements = node->numElements;
 
-	for(size_t i = 0; i - skippedElements < originalElements && i < node->capacity; ++i)
+	size_t i = 0;
+
+	while(i - skippedElements < originalElements && i < node->capacity &&
+			*elementsDone < numElements)
 	{
 		if(pumaBitmaskGet(&node->freeMask, i) == MASKFREE)
 		{
@@ -27,7 +30,10 @@ static void _runKernelOnNode(struct pumaNode* node,
 
 		void* currentElement = _getElement(node, i);
 		kernel(currentElement, extraData);
+		++i;
 	}
+
+	*elementsDone += i;
 }
 
 static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
@@ -40,22 +46,28 @@ static void _runKernelThread(struct pumaSet* set, pumaKernel kernel,
 
 	assert(tl->numaDomain == _getCurrentNumaDomain());
 
+	size_t elementsDone = 0;
+	size_t initNumElements = tl->numElements;
+
 	PROFILING_DECLS(runKernel);
 	PROFILE(runKernel,
-	while(currentNode != NULL && currentNode->active)
+	while(currentNode != NULL && currentNode->active &&
+			elementsDone < initNumElements)
 	{
 		if(currentNode->dirty)
 			_cleanupNode(currentNode, tl);
 
-		_runKernelOnNode(currentNode, kernel, extraData);
+		_runKernelOnNode(currentNode, kernel, extraData, &elementsDone,
+				initNumElements);
 
 		currentNode = currentNode->next;
 	}
 	)
 	VALGRIND_MAKE_MEM_DEFINED(tl, sizeof(struct pumaThreadList));
-	tl->totalRunTime -= tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->lastNRunTime -= tl->kernelRunTimes[tl->nextRunTimeSlot];
 	tl->kernelRunTimes[tl->nextRunTimeSlot] = GET_ELAPSED_S(runKernel);
-	tl->totalRunTime += tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->lastNRunTime += tl->kernelRunTimes[tl->nextRunTimeSlot];
+	tl->latestRunTime = tl->kernelRunTimes[tl->nextRunTimeSlot];
 	++tl->nextRunTimeSlot;
 	tl->nextRunTimeSlot %= NUM_KERNEL_RUNTIMES;
 	VALGRIND_MAKE_MEM_NOACCESS(tl, sizeof(struct pumaThreadList));
@@ -104,12 +116,35 @@ static void _cleanupKernelWorker(void* voidArg)
 	arg->extraDataDetails->extraDataDestructor(arg->extraData[thread]);
 }
 
+double getLastMaxKernelRuntime(struct pumaSet* set)
+{
+	double max = 0;
+
+	for(size_t thread = 0; thread < set->numThreads; ++thread)
+	{
+		struct pumaThreadList* tl = set->tidToThreadList[thread];
+		if(tl->latestRunTime > max)
+			max = tl->latestRunTime;
+	}
+
+	return max;
+}
+
+void getLastKernelRuntimes(struct pumaSet* set, double* times)
+{
+	for(size_t thread = 0; thread < set->numThreads; ++thread)
+	{
+		struct pumaThreadList* tl = set->tidToThreadList[thread];
+		times[thread] = tl->latestRunTime;
+	}
+}
+
 void runKernelList(struct pumaSet* set, pumaKernel kernels[],
 		size_t numKernels, struct pumaExtraKernelData* extraDataDetails)
 {
 	_balanceThreadLoad(set);
 
-	unsigned int numThreads = pumaGetNumThreads(set->threadPool);
+	unsigned int numThreads = set->numThreads;
 	void* extraData[numThreads];
 
 	if(extraDataDetails == NULL)

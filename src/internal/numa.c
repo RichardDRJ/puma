@@ -18,7 +18,8 @@
 void* numalloc_on_node(size_t psize, int domain)
 {
 	(void)domain;
-	void* ret = mmap(NULL, psize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	void* ret;
+	posix_memalign(&ret, pumaPageSize, psize);
 
 #ifndef NNUMA
 	int maxnode = numa_max_node();
@@ -80,7 +81,8 @@ void* numalloc_aligned_on_node(size_t psize, int domain)
 
 void nufree(void* ptr, size_t size)
 {
-	munmap(ptr, size);
+	(void)size;
+	free(ptr);
 }
 
 void nufree_aligned(void* ptr, size_t size)
